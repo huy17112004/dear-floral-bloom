@@ -1,17 +1,21 @@
 import { Card, CardContent } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 import type { LucideIcon } from 'lucide-react';
+import React from 'react';
 
 interface StatisticCardProps {
   title: string;
   value: string | number;
-  icon: LucideIcon;
+  icon: LucideIcon | React.ReactNode;
   description?: string;
   trend?: 'up' | 'down' | 'neutral';
   className?: string;
 }
 
-export function StatisticCard({ title, value, icon: Icon, description, className }: StatisticCardProps) {
+export function StatisticCard({ title, value, icon, description, className }: StatisticCardProps) {
+  const isComponent = typeof icon === 'function';
+  const Icon = isComponent ? (icon as LucideIcon) : null;
+
   return (
     <Card className={cn('bg-card', className)}>
       <CardContent className="p-6">
@@ -22,7 +26,7 @@ export function StatisticCard({ title, value, icon: Icon, description, className
             {description && <p className="mt-1 text-xs text-caption">{description}</p>}
           </div>
           <div className="rounded-lg bg-primary/10 p-3">
-            <Icon className="h-5 w-5 text-primary" />
+            {Icon ? <Icon className="h-5 w-5 text-primary" /> : <span className="text-primary">{icon}</span>}
           </div>
         </div>
       </CardContent>
