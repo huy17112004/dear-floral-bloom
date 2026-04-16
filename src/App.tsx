@@ -7,6 +7,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 // Layouts
 import { CustomerLayout } from "@/components/customer/CustomerLayout";
 import { AdminLayout } from "@/components/admin/AdminLayout";
+import { StaffLayout } from "@/components/staff/StaffLayout";
 
 // Customer pages
 import HomePage from "@/pages/customer/HomePage";
@@ -38,6 +39,15 @@ import AdminCustomOrders from "@/pages/admin/AdminCustomOrders";
 import AdminPurchaseReceipts from "@/pages/admin/AdminPurchaseReceipts";
 import AdminInventory from "@/pages/admin/AdminInventory";
 import AdminReports from "@/pages/admin/AdminReports";
+
+// Staff pages
+import StaffDashboard from "@/pages/staff/StaffDashboard";
+import StaffAvailableOrders from "@/pages/staff/StaffAvailableOrders";
+import StaffCustomOrders from "@/pages/staff/StaffCustomOrders";
+import StaffProductList from "@/pages/staff/StaffProductList";
+import StaffPurchaseReceipts from "@/pages/staff/StaffPurchaseReceipts";
+import StaffInventory from "@/pages/staff/StaffInventory";
+import StaffDeliveryTracking from "@/pages/staff/StaffDeliveryTracking";
 
 import NotFound from "./pages/NotFound";
 
@@ -79,6 +89,17 @@ const App = () => (
             <Route path="/admin/purchase-receipts" element={<AdminPurchaseReceipts />} />
             <Route path="/admin/inventory" element={<AdminInventory />} />
             <Route path="/admin/reports" element={<AdminReports />} />
+          </Route>
+
+          {/* Staff site */}
+          <Route element={<StaffLayout />}>
+            <Route path="/staff/dashboard" element={<StaffDashboard />} />
+            <Route path="/staff/orders/available" element={<StaffAvailableOrders />} />
+            <Route path="/staff/orders/custom" element={<StaffCustomOrders />} />
+            <Route path="/staff/products" element={<StaffProductList />} />
+            <Route path="/staff/purchase-receipts" element={<StaffPurchaseReceipts />} />
+            <Route path="/staff/inventory" element={<StaffInventory />} />
+            <Route path="/staff/delivery" element={<StaffDeliveryTracking />} />
           </Route>
 
           <Route path="*" element={<NotFound />} />
