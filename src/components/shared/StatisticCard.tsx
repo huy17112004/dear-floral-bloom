@@ -26,7 +26,7 @@ export function StatisticCard({ title, value, icon, description, className }: St
             {description && <p className="mt-1 text-xs text-caption">{description}</p>}
           </div>
           <div className="rounded-lg bg-primary/10 p-3">
-            {Icon ? <Icon className="h-5 w-5 text-primary" /> : <span className="text-primary">{icon}</span>}
+            {Icon ? <Icon className="h-5 w-5 text-primary" /> : <span className="text-primary">{icon as React.ReactNode}</span>}
           </div>
         </div>
       </CardContent>
