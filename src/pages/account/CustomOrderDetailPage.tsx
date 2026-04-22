@@ -1,20 +1,88 @@
 import { useParams, Link } from 'react-router-dom';
-import { mockCustomOrders, getProductById } from '@/data/mockData';
+import { useEffect, useMemo, useState } from 'react';
 import { StatusBadge } from '@/components/shared/StatusBadge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { ArrowLeft } from 'lucide-react';
+import { customOrderApi } from '@/api';
+import { mapCustomOrder } from '@/api/mappers';
+import type { CustomDemo, CustomOrder } from '@/types';
+import { toast } from 'sonner';
 
 export default function CustomOrderDetailPage() {
   const { id } = useParams();
-  const order = mockCustomOrders.find(o => o.id === id);
+  const [order, setOrder] = useState<CustomOrder | null>(null);
+  const [demos, setDemos] = useState<CustomDemo[]>([]);
+  const [feedbackInputs, setFeedbackInputs] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    const load = async () => {
+      if (!id) return;
+
+      try {
+        const [orderResponse, demosResponse] = await Promise.all([
+          customOrderApi.getCustomOrderDetail(Number(id)),
+          customOrderApi.getCustomOrderDemos(Number(id)),
+        ]);
+
+        const mappedOrder = mapCustomOrder(orderResponse.data);
+        const mappedDemos: CustomDemo[] = demosResponse.data.map(demo => ({
+          id: String(demo.demoId),
+          customOrderId: String(demo.orderId),
+          versionNo: demo.versionNo,
+          demoImageUrl: demo.demoImageUrl || '/placeholder.svg',
+          demoDescription: demo.demoDescription,
+          customerResponseStatus: (demo.customerResponseStatus || 'pending').toLowerCase() as CustomDemo['customerResponseStatus'],
+          customerFeedback: demo.customerFeedback,
+          uploadedBy: '',
+          uploadedAt: demo.uploadedAt || '',
+          respondedAt: demo.respondedAt || undefined,
+        }));
+
+        setOrder(mappedOrder);
+        setDemos(mappedDemos);
+      } catch (error) {
+        const message = error instanceof Error ? error.message : 'Không thể tải chi tiết đơn custom';
+        toast.error(message);
+      }
+    };
+
+    void load();
+  }, [id]);
+
+  const frameName = useMemo(() => order?.selectedFrame?.name || '—', [order]);
+
+  const submitFeedback = async (demoId: string, action: 'approve' | 'request_revision') => {
+    if (!id) return;
+    try {
+      await customOrderApi.feedbackCustomOrderDemo(Number(id), Number(demoId), {
+        action,
+        feedback: feedbackInputs[demoId] || undefined,
+      });
+      toast.success('Gửi phản hồi demo thành công');
+      const refreshed = await customOrderApi.getCustomOrderDemos(Number(id));
+      setDemos(refreshed.data.map(demo => ({
+        id: String(demo.demoId),
+        customOrderId: String(demo.orderId),
+        versionNo: demo.versionNo,
+        demoImageUrl: demo.demoImageUrl || '/placeholder.svg',
+        demoDescription: demo.demoDescription,
+        customerResponseStatus: (demo.customerResponseStatus || 'pending').toLowerCase() as CustomDemo['customerResponseStatus'],
+        customerFeedback: demo.customerFeedback,
+        uploadedBy: '',
+        uploadedAt: demo.uploadedAt || '',
+        respondedAt: demo.respondedAt || undefined,
+      })));
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Không thể gửi phản hồi demo';
+      toast.error(message);
+    }
+  };
 
   if (!order) {
     return <div className="container py-16 text-center text-caption">Đơn hàng không tồn tại.</div>;
   }
-
-  const frame = getProductById(order.selectedFrameProductId);
 
   return (
     <div className="container max-w-3xl py-8">
@@ -32,7 +100,7 @@ export default function CustomOrderDetailPage() {
         <Card>
           <CardHeader><CardTitle className="font-heading text-base">Thông tin đơn hàng</CardTitle></CardHeader>
           <CardContent className="space-y-3 text-sm">
-            <div className="flex justify-between"><span className="text-caption">Khung tranh</span><span className="text-heading font-medium">{frame?.name || '—'}</span></div>
+            <div className="flex justify-between"><span className="text-caption">Khung tranh</span><span className="text-heading font-medium">{frameName}</span></div>
             <div className="flex justify-between"><span className="text-caption">Loại hoa</span><span className="text-heading">{order.flowerType}</span></div>
             <div className="flex justify-between"><span className="text-caption">Yêu cầu</span><span className="text-heading text-right max-w-[60%]">{order.personalizationContent}</span></div>
             {order.requestedDeliveryDate && (
@@ -54,11 +122,11 @@ export default function CustomOrderDetailPage() {
         </Card>
 
         {/* Demos */}
-        {order.demos && order.demos.length > 0 && (
+        {demos.length > 0 && (
           <Card>
-            <CardHeader><CardTitle className="font-heading text-base">Demo ({order.demos.length} phiên bản)</CardTitle></CardHeader>
+            <CardHeader><CardTitle className="font-heading text-base">Demo ({demos.length} phiên bản)</CardTitle></CardHeader>
             <CardContent className="space-y-4">
-              {order.demos.map(demo => (
+              {demos.map(demo => (
                 <div key={demo.id} className="rounded-xl border bg-surface-warm p-4">
                   <div className="flex items-center justify-between mb-3">
                     <span className="font-medium text-heading">Phiên bản {demo.versionNo}</span>
@@ -76,10 +144,14 @@ export default function CustomOrderDetailPage() {
                   )}
                   {demo.customerResponseStatus === 'pending' && (
                     <div className="mt-4 space-y-3">
-                      <Textarea placeholder="Nhập phản hồi chỉnh sửa (nếu có)..." />
+                      <Textarea
+                        placeholder="Nhập phản hồi chỉnh sửa (nếu có)..."
+                        value={feedbackInputs[demo.id] || ''}
+                        onChange={e => setFeedbackInputs(prev => ({ ...prev, [demo.id]: e.target.value }))}
+                      />
                       <div className="flex gap-2">
-                        <Button className="rounded-full">Duyệt demo</Button>
-                        <Button variant="outline" className="rounded-full">Yêu cầu chỉnh sửa</Button>
+                        <Button className="rounded-full" onClick={() => void submitFeedback(demo.id, 'approve')}>Duyệt demo</Button>
+                        <Button variant="outline" className="rounded-full" onClick={() => void submitFeedback(demo.id, 'request_revision')}>Yêu cầu chỉnh sửa</Button>
                       </div>
                     </div>
                   )}

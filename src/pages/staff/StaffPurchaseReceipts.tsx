@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
@@ -7,13 +7,66 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { mockPurchaseReceipts, mockProducts } from '@/data/mockData';
-import type { PurchaseReceipt } from '@/types';
-import { Plus, Eye, Trash2 } from 'lucide-react';
+import { purchaseReceiptApi, productApi } from '@/api';
+import type { ProductResponse } from '@/api/productApi';
+import type { PurchaseReceiptResponse } from '@/api/purchaseReceiptApi';
+import { Eye, Plus } from 'lucide-react';
+import { toast } from 'sonner';
 
 export default function StaffPurchaseReceipts() {
-  const [selectedReceipt, setSelectedReceipt] = useState<PurchaseReceipt | null>(null);
+  const [receipts, setReceipts] = useState<PurchaseReceiptResponse[]>([]);
+  const [products, setProducts] = useState<ProductResponse[]>([]);
+  const [selectedReceipt, setSelectedReceipt] = useState<PurchaseReceiptResponse | null>(null);
   const [showCreate, setShowCreate] = useState(false);
+  const [receiptDate, setReceiptDate] = useState('');
+  const [note, setNote] = useState('');
+  const [productId, setProductId] = useState('');
+  const [quantity, setQuantity] = useState(1);
+  const [unitCost, setUnitCost] = useState(0);
+
+  const loadData = async () => {
+    try {
+      const [receiptsResponse, productsResponse] = await Promise.all([
+        purchaseReceiptApi.getPurchaseReceipts({ page: 0, limit: 100 }),
+        productApi.getAdminProducts({ page: 0, limit: 200 }),
+      ]);
+      setReceipts(receiptsResponse.data);
+      setProducts(productsResponse.data);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Không thể tải dữ liệu phiếu nhập';
+      toast.error(message);
+    }
+  };
+
+  useEffect(() => {
+    void loadData();
+  }, []);
+
+  const onCreateReceipt = async () => {
+    if (!receiptDate || !productId || quantity <= 0 || unitCost <= 0) {
+      toast.error('Vui lòng nhập đủ thông tin phiếu nhập');
+      return;
+    }
+
+    try {
+      await purchaseReceiptApi.createPurchaseReceipt({
+        receiptDate,
+        note,
+        items: [{ productId: Number(productId), quantity, unitCost }],
+      });
+      toast.success('Tạo phiếu nhập thành công');
+      setShowCreate(false);
+      setReceiptDate('');
+      setNote('');
+      setProductId('');
+      setQuantity(1);
+      setUnitCost(0);
+      await loadData();
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Không thể tạo phiếu nhập';
+      toast.error(message);
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -38,15 +91,15 @@ export default function StaffPurchaseReceipts() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {mockPurchaseReceipts.map(receipt => {
-                const totalValue = receipt.items?.reduce((sum, i) => sum + i.subtotal, 0) || 0;
+              {receipts.map(receipt => {
+                const totalValue = receipt.items?.reduce((sum, item) => sum + item.subtotal, 0) || 0;
                 return (
-                  <TableRow key={receipt.id}>
+                  <TableRow key={receipt.purchaseReceiptId}>
                     <TableCell className="font-medium">{receipt.receiptCode}</TableCell>
                     <TableCell>{receipt.receiptDate}</TableCell>
                     <TableCell>{receipt.items?.length || 0}</TableCell>
                     <TableCell>{totalValue.toLocaleString('vi-VN')}đ</TableCell>
-                    <TableCell className="max-w-[200px] truncate text-muted-foreground">{receipt.note || '—'}</TableCell>
+                    <TableCell className="max-w-[220px] truncate text-muted-foreground">{receipt.note || '—'}</TableCell>
                     <TableCell className="text-right">
                       <Button variant="ghost" size="sm" onClick={() => setSelectedReceipt(receipt)}>
                         <Eye className="mr-1 h-4 w-4" /> Xem
@@ -60,7 +113,6 @@ export default function StaffPurchaseReceipts() {
         </CardContent>
       </Card>
 
-      {/* Detail dialog */}
       <Dialog open={!!selectedReceipt} onOpenChange={() => setSelectedReceipt(null)}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
@@ -73,25 +125,21 @@ export default function StaffPurchaseReceipts() {
                 <div><span className="text-muted-foreground">Ghi chú:</span> {selectedReceipt.note || '—'}</div>
               </div>
               <div className="space-y-2">
-                {selectedReceipt.items?.map(item => {
-                  const product = mockProducts.find(p => p.id === item.productId);
-                  return (
-                    <div key={item.id} className="flex items-center justify-between rounded-lg border px-3 py-2">
-                      <div>
-                        <p className="text-sm font-medium">{product?.name || item.productId}</p>
-                        <p className="text-xs text-muted-foreground">SL: {item.quantity} × {item.unitCost.toLocaleString('vi-VN')}đ</p>
-                      </div>
-                      <span className="text-sm font-semibold">{item.subtotal.toLocaleString('vi-VN')}đ</span>
+                {selectedReceipt.items?.map(item => (
+                  <div key={`${item.productId}-${item.productName}`} className="flex items-center justify-between rounded-lg border px-3 py-2">
+                    <div>
+                      <p className="text-sm font-medium">{item.productName}</p>
+                      <p className="text-xs text-muted-foreground">SL: {item.quantity} × {item.unitCost.toLocaleString('vi-VN')}đ</p>
                     </div>
-                  );
-                })}
+                    <span className="text-sm font-semibold">{item.subtotal.toLocaleString('vi-VN')}đ</span>
+                  </div>
+                ))}
               </div>
             </div>
           )}
         </DialogContent>
       </Dialog>
 
-      {/* Create dialog */}
       <Dialog open={showCreate} onOpenChange={setShowCreate}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
@@ -100,44 +148,46 @@ export default function StaffPurchaseReceipts() {
           <div className="space-y-4">
             <div>
               <Label>Ngày nhập</Label>
-              <Input type="date" />
+              <Input type="date" value={receiptDate} onChange={e => setReceiptDate(e.target.value)} />
             </div>
             <div>
               <Label>Ghi chú</Label>
-              <Textarea placeholder="Ghi chú phiếu nhập..." />
+              <Textarea placeholder="Ghi chú phiếu nhập..." value={note} onChange={e => setNote(e.target.value)} />
             </div>
             <div className="rounded-lg border p-3 space-y-3">
               <p className="text-sm font-semibold">Mặt hàng nhập</p>
-              <div className="grid grid-cols-12 gap-2 items-end">
-                <div className="col-span-5">
-                  <Label>Sản phẩm</Label>
-                  <Select>
-                    <SelectTrigger><SelectValue placeholder="Chọn..." /></SelectTrigger>
-                    <SelectContent>
-                      {mockProducts.map(p => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="col-span-3">
+              <div>
+                <Label>Sản phẩm</Label>
+                <Select value={productId} onValueChange={setProductId}>
+                  <SelectTrigger><SelectValue placeholder="Chọn sản phẩm" /></SelectTrigger>
+                  <SelectContent>
+                    {products.map(product => (
+                      <SelectItem key={product.productId} value={String(product.productId)}>
+                        {product.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
                   <Label>Số lượng</Label>
-                  <Input type="number" placeholder="0" />
+                  <Input type="number" value={quantity} onChange={e => setQuantity(Number(e.target.value))} />
                 </div>
-                <div className="col-span-3">
-                  <Label>Giá nhập</Label>
-                  <Input type="number" placeholder="0" />
-                </div>
-                <div className="col-span-1">
-                  <Button variant="outline" size="icon"><Plus className="h-4 w-4" /></Button>
+                <div>
+                  <Label>Đơn giá nhập</Label>
+                  <Input type="number" value={unitCost} onChange={e => setUnitCost(Number(e.target.value))} />
                 </div>
               </div>
             </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowCreate(false)}>Hủy</Button>
-            <Button>Tạo phiếu nhập</Button>
+            <Button onClick={() => void onCreateReceipt()}>Tạo phiếu nhập</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
   );
 }
+

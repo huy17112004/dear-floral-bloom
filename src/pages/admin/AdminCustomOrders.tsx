@@ -1,4 +1,4 @@
-import { mockCustomOrders, getProductById } from '@/data/mockData';
+import { useEffect, useState } from 'react';
 import { StatusBadge } from '@/components/shared/StatusBadge';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -6,14 +6,32 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { Search, Eye } from 'lucide-react';
-import { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import type { CustomOrder } from '@/types';
+import { adminCustomOrderApi } from '@/api';
+import { mapCustomOrder } from '@/api/mappers';
+import { toast } from 'sonner';
 
 export default function AdminCustomOrders() {
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [orders, setOrders] = useState<CustomOrder[]>([]);
 
-  const filtered = mockCustomOrders.filter(o => {
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const response = await adminCustomOrderApi.getAdminCustomOrders({ page: 0, limit: 100 });
+        setOrders(response.data.map(mapCustomOrder));
+      } catch (error) {
+        const message = error instanceof Error ? error.message : 'Không thể tải danh sách đơn custom';
+        toast.error(message);
+      }
+    };
+
+    void load();
+  }, []);
+
+  const filtered = orders.filter(o => {
     const matchSearch = !search || o.orderCode.toLowerCase().includes(search.toLowerCase());
     const matchStatus = statusFilter === 'all' || o.orderStatus === statusFilter;
     return matchSearch && matchStatus;
@@ -60,12 +78,11 @@ export default function AdminCustomOrders() {
             </TableHeader>
             <TableBody>
               {filtered.map(o => {
-                const frame = getProductById(o.selectedFrameProductId);
                 return (
                   <TableRow key={o.id}>
                     <TableCell className="font-medium text-heading">{o.orderCode}</TableCell>
                     <TableCell className="text-body">{o.flowerType}</TableCell>
-                    <TableCell className="text-body">{frame?.name || '—'}</TableCell>
+                    <TableCell className="text-body">{o.selectedFrame?.name || '—'}</TableCell>
                     <TableCell className="font-medium">{o.totalAmount.toLocaleString('vi-VN')}₫</TableCell>
                     <TableCell><StatusBadge type="payment" status={o.paymentStatus} /></TableCell>
                     <TableCell><StatusBadge type="customOrder" status={o.orderStatus} /></TableCell>

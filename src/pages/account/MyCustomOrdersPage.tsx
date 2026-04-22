@@ -1,11 +1,29 @@
 import { Link } from 'react-router-dom';
-import { mockCustomOrders } from '@/data/mockData';
+import { useEffect, useState } from 'react';
 import { StatusBadge } from '@/components/shared/StatusBadge';
 import { Card, CardContent } from '@/components/ui/card';
 import { ArrowRight } from 'lucide-react';
+import { customOrderApi } from '@/api';
+import { mapCustomOrder } from '@/api/mappers';
+import type { CustomOrder } from '@/types';
+import { toast } from 'sonner';
 
 export default function MyCustomOrdersPage() {
-  const orders = mockCustomOrders;
+  const [orders, setOrders] = useState<CustomOrder[]>([]);
+
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const response = await customOrderApi.getMyCustomOrders({ page: 0, limit: 100 });
+        setOrders(response.data.map(mapCustomOrder));
+      } catch (error) {
+        const message = error instanceof Error ? error.message : 'Không thể tải danh sách đơn custom';
+        toast.error(message);
+      }
+    };
+
+    void load();
+  }, []);
 
   return (
     <div className="container max-w-3xl py-8">

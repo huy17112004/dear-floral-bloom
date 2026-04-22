@@ -1,20 +1,72 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { getCustomSelectableProducts, mockAddresses } from '@/data/mockData';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { AddressCard } from '@/components/shared/AddressCard';
-import { ArrowLeft, Upload, Check } from 'lucide-react';
+import { ArrowLeft, Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { customOrderApi, meApi, productApi } from '@/api';
+import { mapAddress, mapProduct } from '@/api/mappers';
+import type { CustomerAddress, Product } from '@/types';
+import { toast } from 'sonner';
 
 export default function CreateCustomOrderPage() {
-  const frames = getCustomSelectableProducts();
-  const addresses = mockAddresses;
+  const [frames, setFrames] = useState<Product[]>([]);
+  const [addresses, setAddresses] = useState<CustomerAddress[]>([]);
   const [selectedFrame, setSelectedFrame] = useState<string | null>(null);
-  const [selectedAddress, setSelectedAddress] = useState<string>(addresses[0]?.id || '');
+  const [selectedAddress, setSelectedAddress] = useState<string>('');
+  const [flowerType, setFlowerType] = useState('');
+  const [personalizationContent, setPersonalizationContent] = useState('');
+  const [requestedDeliveryDate, setRequestedDeliveryDate] = useState('');
+  const [flowerInputImage, setFlowerInputImage] = useState('');
+  const [depositPaymentMethod, setDepositPaymentMethod] = useState('bank_transfer');
+
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const [framesResponse, addressesResponse] = await Promise.all([
+          productApi.getCustomSelectableProducts({ page: 0, limit: 100 }),
+          meApi.getMyAddresses(),
+        ]);
+
+        setFrames(framesResponse.data.map(mapProduct));
+        const mappedAddresses = addressesResponse.data.map(mapAddress);
+        setAddresses(mappedAddresses);
+        setSelectedAddress(mappedAddresses[0]?.id ?? '');
+      } catch (error) {
+        const message = error instanceof Error ? error.message : 'Không thể tải dữ liệu tạo đơn custom';
+        toast.error(message);
+      }
+    };
+
+    void load();
+  }, []);
+
+  const onSubmit = async () => {
+    if (!selectedFrame || !selectedAddress || !flowerType || !flowerInputImage) {
+      toast.error('Vui lòng nhập đủ thông tin bắt buộc');
+      return;
+    }
+
+    try {
+      await customOrderApi.createCustomOrder({
+        selectedFrameProductId: Number(selectedFrame),
+        shippingAddressId: Number(selectedAddress),
+        flowerType,
+        personalizationContent,
+        requestedDeliveryDate: requestedDeliveryDate || undefined,
+        flowerInputImage,
+        depositPaymentMethod,
+      });
+      toast.success('Tạo đơn custom thành công');
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Tạo đơn custom thất bại';
+      toast.error(message);
+    }
+  };
 
   return (
     <div className="container max-w-3xl py-8">
@@ -65,25 +117,31 @@ export default function CreateCustomOrderPage() {
           <CardContent className="space-y-4">
             <div>
               <Label>Loại hoa</Label>
-              <Input placeholder="VD: Hoa hồng, hoa cúc..." className="mt-1" />
+              <Input placeholder="VD: Hoa hồng, hoa cúc..." className="mt-1" value={flowerType} onChange={e => setFlowerType(e.target.value)} />
             </div>
             <div>
               <Label>Nội dung cá nhân hóa</Label>
-              <Textarea placeholder="Mô tả thiết kế mong muốn, chữ khắc, phong cách..." rows={3} className="mt-1" />
+              <Textarea
+                placeholder="Mô tả thiết kế mong muốn, chữ khắc, phong cách..."
+                rows={3}
+                className="mt-1"
+                value={personalizationContent}
+                onChange={e => setPersonalizationContent(e.target.value)}
+              />
             </div>
             <div>
               <Label>Ngày mong muốn nhận hàng</Label>
-              <Input type="date" className="mt-1" />
+              <Input type="date" className="mt-1" value={requestedDeliveryDate} onChange={e => setRequestedDeliveryDate(e.target.value)} />
             </div>
             <div>
               <Label>Ảnh hoa thực tế</Label>
-              <div className="mt-1 flex items-center justify-center rounded-xl border-2 border-dashed border-border bg-surface-warm p-8 text-center">
-                <div>
-                  <Upload className="mx-auto mb-2 h-8 w-8 text-caption" />
-                  <p className="text-sm text-caption">Kéo thả hoặc click để upload ảnh hoa</p>
-                  <p className="mt-1 text-xs text-caption">PNG, JPG tối đa 10MB</p>
-                </div>
-              </div>
+              <Input
+                className="mt-1"
+                placeholder="URL ảnh hoa đầu vào"
+                value={flowerInputImage}
+                onChange={e => setFlowerInputImage(e.target.value)}
+              />
+              <p className="mt-1 text-xs text-caption">Backend hiện nhận chuỗi URL cho flowerInputImage.</p>
             </div>
           </CardContent>
         </Card>
@@ -123,7 +181,7 @@ export default function CreateCustomOrderPage() {
 
         <div className="flex justify-end gap-3">
           <Link to="/custom-order"><Button variant="outline" className="rounded-full">Hủy</Button></Link>
-          <Button className="rounded-full px-8">Gửi yêu cầu đặt hàng</Button>
+          <Button onClick={onSubmit} className="rounded-full px-8">Gửi yêu cầu đặt hàng</Button>
         </div>
       </div>
     </div>

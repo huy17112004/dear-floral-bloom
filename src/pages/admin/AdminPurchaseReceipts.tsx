@@ -1,11 +1,30 @@
-import { mockPurchaseReceipts, getProductById } from '@/data/mockData';
+import { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Plus, Eye } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { purchaseReceiptApi } from '@/api';
+import type { PurchaseReceiptResponse } from '@/api/purchaseReceiptApi';
+import { toast } from 'sonner';
 
 export default function AdminPurchaseReceipts() {
+  const [receipts, setReceipts] = useState<PurchaseReceiptResponse[]>([]);
+
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const response = await purchaseReceiptApi.getPurchaseReceipts({ page: 0, limit: 100 });
+        setReceipts(response.data);
+      } catch (error) {
+        const message = error instanceof Error ? error.message : 'Không thể tải phiếu nhập';
+        toast.error(message);
+      }
+    };
+
+    void load();
+  }, []);
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -26,8 +45,8 @@ export default function AdminPurchaseReceipts() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {mockPurchaseReceipts.map(r => (
-                <TableRow key={r.id}>
+              {receipts.map(r => (
+                <TableRow key={r.purchaseReceiptId}>
                   <TableCell className="font-medium text-heading">{r.receiptCode}</TableCell>
                   <TableCell>{new Date(r.receiptDate).toLocaleDateString('vi-VN')}</TableCell>
                   <TableCell>{r.items?.length || 0}</TableCell>
@@ -42,11 +61,10 @@ export default function AdminPurchaseReceipts() {
                         <div className="space-y-3">
                           <p className="text-sm text-caption">Ngày: {new Date(r.receiptDate).toLocaleDateString('vi-VN')}</p>
                           {r.items?.map(item => {
-                            const prod = getProductById(item.productId);
                             return (
-                              <div key={item.id} className="flex justify-between rounded-lg bg-surface-warm p-3 text-sm">
+                              <div key={`${item.productId}-${item.productName}`} className="flex justify-between rounded-lg bg-surface-warm p-3 text-sm">
                                 <div>
-                                  <span className="font-medium">{prod?.name}</span>
+                                  <span className="font-medium">{item.productName}</span>
                                   <span className="ml-2 text-caption">x{item.quantity}</span>
                                 </div>
                                 <span>{item.subtotal.toLocaleString('vi-VN')}₫</span>

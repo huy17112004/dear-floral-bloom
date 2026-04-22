@@ -1,22 +1,36 @@
-import { useState } from 'react';
-import { mockInventory, getProductById } from '@/data/mockData';
+import { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Search } from 'lucide-react';
+import { inventoryApi } from '@/api';
+import type { InventoryItemResponse } from '@/api/inventoryApi';
+import { toast } from 'sonner';
 
 export default function AdminInventory() {
   const [search, setSearch] = useState('');
   const [kindFilter, setKindFilter] = useState('all');
+  const [items, setItems] = useState<InventoryItemResponse[]>([]);
 
-  const items = mockInventory.map(inv => ({
-    ...inv,
-    product: getProductById(inv.productId),
-  })).filter(inv => {
-    const matchSearch = !search || inv.product?.name.toLowerCase().includes(search.toLowerCase());
-    const matchKind = kindFilter === 'all' || inv.product?.productKind === kindFilter;
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const response = await inventoryApi.getInventory({ page: 0, limit: 200 });
+        setItems(response.data);
+      } catch (error) {
+        const message = error instanceof Error ? error.message : 'Không thể tải tồn kho';
+        toast.error(message);
+      }
+    };
+
+    void load();
+  }, []);
+
+  const filtered = items.filter(inv => {
+    const matchSearch = !search || inv.productName.toLowerCase().includes(search.toLowerCase());
+    const matchKind = kindFilter === 'all' || inv.productKind.toLowerCase() === kindFilter;
     return matchSearch && matchKind;
   });
 
@@ -52,19 +66,16 @@ export default function AdminInventory() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {items.map(inv => (
-                <TableRow key={inv.id}>
+              {filtered.map(inv => (
+                <TableRow key={inv.productId}>
                   <TableCell>
                     <div className="flex items-center gap-3">
-                      <div className="h-10 w-10 rounded-lg bg-secondary overflow-hidden shrink-0">
-                        <img src={inv.product?.imageUrl || ''} alt="" className="h-full w-full object-cover" />
-                      </div>
-                      <span className="font-medium text-heading">{inv.product?.name}</span>
+                      <span className="font-medium text-heading">{inv.productName}</span>
                     </div>
                   </TableCell>
                   <TableCell>
                     <Badge variant="secondary" className="text-xs">
-                      {inv.product?.productKind === 'standard_product' ? 'Sản phẩm' : 'Khung tranh'}
+                      {inv.productKind.toLowerCase() === 'standard_product' ? 'Sản phẩm' : 'Khung tranh'}
                     </Badge>
                   </TableCell>
                   <TableCell>
@@ -72,7 +83,7 @@ export default function AdminInventory() {
                       {inv.quantityOnHand}
                     </span>
                   </TableCell>
-                  <TableCell className="text-caption text-sm">{new Date(inv.updatedAt).toLocaleDateString('vi-VN')}</TableCell>
+                  <TableCell className="text-caption text-sm">—</TableCell>
                 </TableRow>
               ))}
             </TableBody>

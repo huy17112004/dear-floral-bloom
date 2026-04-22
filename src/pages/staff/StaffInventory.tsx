@@ -1,21 +1,33 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { mockInventory, mockProducts } from '@/data/mockData';
+import { inventoryApi } from '@/api';
+import type { InventoryItemResponse } from '@/api/inventoryApi';
+import { toast } from 'sonner';
 
 export default function StaffInventory() {
+  const [items, setItems] = useState<InventoryItemResponse[]>([]);
   const [kindFilter, setKindFilter] = useState<string>('all');
 
-  const inventoryWithProduct = mockInventory.map(item => ({
-    ...item,
-    product: mockProducts.find(p => p.id === item.productId),
-  }));
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const response = await inventoryApi.getInventory({ page: 0, limit: 200 });
+        setItems(response.data);
+      } catch (error) {
+        const message = error instanceof Error ? error.message : 'Không thể tải tồn kho';
+        toast.error(message);
+      }
+    };
+
+    void load();
+  }, []);
 
   const filtered = kindFilter === 'all'
-    ? inventoryWithProduct
-    : inventoryWithProduct.filter(i => i.product?.productKind === kindFilter);
+    ? items
+    : items.filter(item => item.productKind.toLowerCase() === kindFilter);
 
   return (
     <div className="space-y-6">
@@ -42,16 +54,15 @@ export default function StaffInventory() {
                 <TableHead>Loại</TableHead>
                 <TableHead>Tồn kho</TableHead>
                 <TableHead>Trạng thái</TableHead>
-                <TableHead>Cập nhật lần cuối</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {filtered.map(item => (
-                <TableRow key={item.id}>
-                  <TableCell className="font-medium">{item.product?.name || item.productId}</TableCell>
+                <TableRow key={item.productId}>
+                  <TableCell className="font-medium">{item.productName}</TableCell>
                   <TableCell>
-                    <Badge variant="outline" className={item.product?.productKind === 'frame_option' ? 'bg-purple-50 text-purple-700 border-purple-200' : 'bg-blue-50 text-blue-700 border-blue-200'}>
-                      {item.product?.productKind === 'frame_option' ? 'Khung tranh' : 'Sản phẩm'}
+                    <Badge variant="outline">
+                      {item.productKind.toLowerCase() === 'frame_option' ? 'Khung tranh' : 'Sản phẩm'}
                     </Badge>
                   </TableCell>
                   <TableCell className="font-semibold">{item.quantityOnHand}</TableCell>
@@ -64,7 +75,6 @@ export default function StaffInventory() {
                       <Badge variant="outline" className="bg-green-100 text-green-800 border-green-200">Đủ</Badge>
                     )}
                   </TableCell>
-                  <TableCell className="text-muted-foreground">{item.updatedAt}</TableCell>
                 </TableRow>
               ))}
             </TableBody>
@@ -74,3 +84,4 @@ export default function StaffInventory() {
     </div>
   );
 }
+

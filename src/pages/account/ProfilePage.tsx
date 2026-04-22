@@ -1,11 +1,50 @@
+import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { mockUsers } from '@/data/mockData';
+import { meApi } from '@/api';
+import { toast } from 'sonner';
 
 export default function ProfilePage() {
-  const user = mockUsers[0]; // mock current user
+  const [fullName, setFullName] = useState('');
+  const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const response = await meApi.getMyProfile();
+        setFullName(response.data.fullName);
+        setEmail(response.data.email);
+        setPhone(response.data.phone);
+      } catch (error) {
+        const message = error instanceof Error ? error.message : 'Không thể tải hồ sơ';
+        toast.error(message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    void load();
+  }, []);
+
+  const onSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setSubmitting(true);
+
+    try {
+      await meApi.updateMyProfile({ fullName, email, phone });
+      toast.success('Cập nhật hồ sơ thành công');
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Cập nhật hồ sơ thất bại';
+      toast.error(message);
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   return (
     <div className="container max-w-2xl py-8">
@@ -15,20 +54,28 @@ export default function ProfilePage() {
         <CardHeader>
           <CardTitle className="font-heading text-lg">Thông tin cá nhân</CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent>
+          {loading ? (
+            <p className="text-sm text-caption">Đang tải hồ sơ...</p>
+          ) : (
+            <form onSubmit={onSubmit} className="space-y-4">
           <div>
             <Label>Họ tên</Label>
-            <Input defaultValue={user.fullName} className="mt-1" />
+            <Input value={fullName} onChange={e => setFullName(e.target.value)} className="mt-1" />
           </div>
           <div>
             <Label>Email</Label>
-            <Input type="email" defaultValue={user.email} className="mt-1" />
+            <Input type="email" value={email} onChange={e => setEmail(e.target.value)} className="mt-1" />
           </div>
           <div>
             <Label>Số điện thoại</Label>
-            <Input defaultValue={user.phone} className="mt-1" />
+            <Input value={phone} onChange={e => setPhone(e.target.value)} className="mt-1" />
           </div>
-          <Button className="rounded-full">Cập nhật</Button>
+          <Button type="submit" disabled={submitting} className="rounded-full">
+            {submitting ? 'Đang cập nhật...' : 'Cập nhật'}
+          </Button>
+            </form>
+          )}
         </CardContent>
       </Card>
     </div>

@@ -1,11 +1,33 @@
 import { Link } from 'react-router-dom';
+import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { ProductCard } from '@/components/shared/ProductCard';
-import { getSellableProducts } from '@/data/mockData';
 import { ArrowRight, Flower2, Heart, Sparkles } from 'lucide-react';
+import { productApi } from '@/api';
+import { mapProduct } from '@/api/mappers';
+import type { Product } from '@/types';
+import { toast } from 'sonner';
 
 export default function HomePage() {
-  const featuredProducts = getSellableProducts().slice(0, 4);
+  const [featuredProducts, setFeaturedProducts] = useState<Product[]>([]);
+
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const response = await productApi.getPublicProducts({
+          isSellableDirectly: true,
+          page: 0,
+          limit: 4,
+        });
+        setFeaturedProducts(response.data.map(mapProduct));
+      } catch (error) {
+        const message = error instanceof Error ? error.message : 'Không thể tải sản phẩm nổi bật';
+        toast.error(message);
+      }
+    };
+
+    void load();
+  }, []);
 
   return (
     <div>

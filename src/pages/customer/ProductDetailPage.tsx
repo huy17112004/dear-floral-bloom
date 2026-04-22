@@ -1,16 +1,50 @@
 import { useParams, Link } from 'react-router-dom';
-import { getProductById } from '@/data/mockData';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ArrowLeft, ShoppingBag } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { productApi } from '@/api';
+import { mapProduct } from '@/api/mappers';
+import type { Product } from '@/types';
+import { toast } from 'sonner';
 
 export default function ProductDetailPage() {
   const { id } = useParams();
-  const product = getProductById(id || '');
+  const [product, setProduct] = useState<Product | null>(null);
+  const [loading, setLoading] = useState(true);
   const [quantity, setQuantity] = useState(1);
+
+  useEffect(() => {
+    const load = async () => {
+      if (!id) {
+        setLoading(false);
+        return;
+      }
+
+      try {
+        const response = await productApi.getProductDetail(Number(id));
+        setProduct(mapProduct(response.data));
+      } catch (error) {
+        setProduct(null);
+        const message = error instanceof Error ? error.message : 'Không thể tải chi tiết sản phẩm';
+        toast.error(message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    void load();
+  }, [id]);
+
+  if (loading) {
+    return (
+      <div className="container py-16 text-center">
+        <p className="text-caption">Đang tải sản phẩm...</p>
+      </div>
+    );
+  }
 
   if (!product) {
     return (

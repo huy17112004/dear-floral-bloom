@@ -1,36 +1,76 @@
+import { useEffect, useMemo, useState } from 'react';
 import { StatisticCard } from '@/components/shared/StatisticCard';
-import { mockReportOverview, mockRevenueReport, mockAvailableOrders, mockCustomOrders } from '@/data/mockData';
-import { Package, ShoppingCart, DollarSign, Warehouse, Palette, TrendingUp } from 'lucide-react';
+import { Package, ShoppingCart, DollarSign, Palette, TrendingUp } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { StatusBadge } from '@/components/shared/StatusBadge';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { adminCustomOrderApi, reportApi } from '@/api';
+import { mapCustomOrder } from '@/api/mappers';
+import type { CustomOrder } from '@/types';
+import type { OverviewReportResponse, RevenueReportItemResponse } from '@/api/reportApi';
+import { toast } from 'sonner';
 
 export default function AdminDashboard() {
-  const overview = mockReportOverview;
-  const recentAvailable = mockAvailableOrders.slice(0, 3);
-  const recentCustom = mockCustomOrders.slice(0, 3);
+  const [overview, setOverview] = useState<OverviewReportResponse>({
+    totalProducts: 0,
+    totalOrders: 0,
+    processingOrders: 0,
+    completedOrders: 0,
+  });
+  const [revenueItems, setRevenueItems] = useState<RevenueReportItemResponse[]>([]);
+  const [recentCustom, setRecentCustom] = useState<CustomOrder[]>([]);
+
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const [overviewRes, revenueRes, customRes] = await Promise.all([
+          reportApi.getReportOverview(),
+          reportApi.getRevenueReport({ groupBy: 'MONTH' }),
+          adminCustomOrderApi.getAdminCustomOrders({ page: 0, limit: 3 }),
+        ]);
+
+        setOverview(overviewRes.data);
+        setRevenueItems(revenueRes.data);
+        setRecentCustom(customRes.data.map(mapCustomOrder));
+      } catch (error) {
+        const message = error instanceof Error ? error.message : 'Không thể tải dữ liệu dashboard';
+        toast.error(message);
+      }
+    };
+
+    void load();
+  }, []);
+
+  const revenueChartData = useMemo(
+    () =>
+      revenueItems.map(item => ({
+        period: item.bucketDate,
+        revenue: item.totalRevenue,
+      })),
+    [revenueItems]
+  );
+
+  const totalRevenue = revenueChartData.reduce((sum, item) => sum + item.revenue, 0);
 
   return (
     <div className="space-y-6">
       <h1 className="font-heading text-2xl font-bold text-heading">Dashboard</h1>
 
-      {/* Stats */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
         <StatisticCard title="Sản phẩm" value={overview.totalProducts} icon={Package} />
         <StatisticCard title="Đơn hàng" value={overview.totalOrders} icon={ShoppingCart} />
         <StatisticCard title="Đang xử lý" value={overview.processingOrders} icon={TrendingUp} />
         <StatisticCard title="Hoàn thành" value={overview.completedOrders} icon={ShoppingCart} />
-        <StatisticCard title="Đơn Custom" value={overview.totalCustomOrders} icon={Palette} />
-        <StatisticCard title="Doanh thu" value={`${(overview.totalRevenue / 1000000).toFixed(1)}M`} icon={DollarSign} />
+        <StatisticCard title="Đơn Custom" value={recentCustom.length} icon={Palette} />
+        <StatisticCard title="Doanh thu" value={`${(totalRevenue / 1000000).toFixed(1)}M`} icon={DollarSign} />
       </div>
 
-      {/* Revenue chart */}
       <Card>
         <CardHeader><CardTitle className="font-heading text-base">Doanh thu theo tháng</CardTitle></CardHeader>
         <CardContent>
           <div className="h-64">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={mockRevenueReport}>
+              <BarChart data={revenueChartData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(35 20% 88%)" />
                 <XAxis dataKey="period" tick={{ fontSize: 12 }} />
                 <YAxis tick={{ fontSize: 12 }} tickFormatter={v => `${v / 1000}k`} />
@@ -42,33 +82,26 @@ export default function AdminDashboard() {
         </CardContent>
       </Card>
 
-      {/* Recent orders */}
       <div className="grid gap-6 lg:grid-cols-2">
         <Card>
           <CardHeader><CardTitle className="font-heading text-base">Đơn hàng thường gần đây</CardTitle></CardHeader>
-          <CardContent className="space-y-3">
-            {recentAvailable.map(o => (
-              <div key={o.id} className="flex items-center justify-between rounded-lg bg-surface-warm p-3">
-                <div>
-                  <span className="text-sm font-medium text-heading">{o.orderCode}</span>
-                  <p className="text-xs text-caption">{o.totalAmount.toLocaleString('vi-VN')}₫</p>
-                </div>
-                <StatusBadge type="availableOrder" status={o.orderStatus} />
-              </div>
-            ))}
+          <CardContent>
+            <p className="text-sm text-caption">
+              Chưa hiển thị vì backend chưa có API danh sách đơn hàng thường quản trị.
+            </p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader><CardTitle className="font-heading text-base">Đơn hàng custom gần đây</CardTitle></CardHeader>
           <CardContent className="space-y-3">
-            {recentCustom.map(o => (
-              <div key={o.id} className="flex items-center justify-between rounded-lg bg-surface-warm p-3">
+            {recentCustom.map(order => (
+              <div key={order.id} className="flex items-center justify-between rounded-lg bg-surface-warm p-3">
                 <div>
-                  <span className="text-sm font-medium text-heading">{o.orderCode}</span>
-                  <p className="text-xs text-caption">{o.flowerType}</p>
+                  <span className="text-sm font-medium text-heading">{order.orderCode}</span>
+                  <p className="text-xs text-caption">{order.flowerType}</p>
                 </div>
-                <StatusBadge type="customOrder" status={o.orderStatus} />
+                <StatusBadge type="customOrder" status={order.orderStatus} />
               </div>
             ))}
           </CardContent>
@@ -77,3 +110,4 @@ export default function AdminDashboard() {
     </div>
   );
 }
+

@@ -1,16 +1,37 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { ProductCard } from '@/components/shared/ProductCard';
-import { getSellableProducts, mockCategories } from '@/data/mockData';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Search } from 'lucide-react';
+import { categoryApi, productApi } from '@/api';
+import { mapCategory, mapProduct } from '@/api/mappers';
+import type { Product, ProductCategory } from '@/types';
+import { toast } from 'sonner';
 
 export default function ProductListPage() {
   const [search, setSearch] = useState('');
   const [selectedCat, setSelectedCat] = useState<string | null>(null);
-  const products = getSellableProducts();
+  const [products, setProducts] = useState<Product[]>([]);
+  const [categories, setCategories] = useState<ProductCategory[]>([]);
 
-  const categories = mockCategories.filter(c => c.status === 'active' && c.id !== 'cat-3');
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const [productRes, categoryRes] = await Promise.all([
+          productApi.getPublicProducts({ isSellableDirectly: true, page: 0, limit: 100 }),
+          categoryApi.getPublicCategories(),
+        ]);
+
+        setProducts(productRes.data.map(mapProduct));
+        setCategories(categoryRes.data.map(mapCategory).filter(c => c.status === 'active'));
+      } catch (error) {
+        const message = error instanceof Error ? error.message : 'Không thể tải danh sách sản phẩm';
+        toast.error(message);
+      }
+    };
+
+    void load();
+  }, []);
 
   const filtered = useMemo(() => {
     return products.filter(p => {

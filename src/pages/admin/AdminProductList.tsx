@@ -1,5 +1,4 @@
-import { useState } from 'react';
-import { mockProducts, mockCategories } from '@/data/mockData';
+import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -7,13 +6,42 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Plus, Search, Pencil } from 'lucide-react';
-import type { ProductKind } from '@/types';
+import type { Product, ProductKind } from '@/types';
+import { categoryApi, productApi } from '@/api';
+import { mapCategory, mapProduct } from '@/api/mappers';
+import { toast } from 'sonner';
 
 export default function AdminProductList() {
   const [search, setSearch] = useState('');
   const [kindFilter, setKindFilter] = useState<string>('all');
+  const [products, setProducts] = useState<Product[]>([]);
 
-  const filtered = mockProducts.filter(p => {
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const [productsResponse, categoriesResponse] = await Promise.all([
+          productApi.getAdminProducts({ page: 0, limit: 100 }),
+          categoryApi.getAdminCategories(),
+        ]);
+
+        const categories = categoriesResponse.data.map(mapCategory);
+        const categoryMap = new Map(categories.map(c => [c.id, c]));
+        const mappedProducts = productsResponse.data.map(mapProduct).map(product => ({
+          ...product,
+          category: categoryMap.get(product.categoryId),
+        }));
+
+        setProducts(mappedProducts);
+      } catch (error) {
+        const message = error instanceof Error ? error.message : 'Không thể tải danh sách sản phẩm';
+        toast.error(message);
+      }
+    };
+
+    void load();
+  }, []);
+
+  const filtered = products.filter(p => {
     const matchSearch = !search || p.name.toLowerCase().includes(search.toLowerCase());
     const matchKind = kindFilter === 'all' || p.productKind === kindFilter;
     return matchSearch && matchKind;
@@ -66,7 +94,7 @@ export default function AdminProductList() {
                       </div>
                       <div>
                         <span className="font-medium text-heading">{p.name}</span>
-                        <p className="text-xs text-caption">{p.size}</p>
+                        <p className="text-xs text-caption">{p.size || p.category?.name || '—'}</p>
                       </div>
                     </div>
                   </TableCell>
