@@ -1,4 +1,5 @@
-import type { CustomerAddress, CustomOrder, Product, ProductCategory } from '@/types';
+import type { AvailableOrder, CustomerAddress, CustomOrder, Product, ProductCategory } from '@/types';
+import type { AvailableOrderResponse } from '@/api/availableOrderApi';
 import type { AddressResponse } from '@/api/meApi';
 import type { CategoryResponse } from '@/api/categoryApi';
 import type { CustomOrderResponse } from '@/api/customOrderApi';
@@ -106,3 +107,47 @@ export function mapCustomOrder(response: CustomOrderResponse): CustomOrder {
   };
 }
 
+export function mapAvailableOrder(response: AvailableOrderResponse): AvailableOrder {
+  const paymentStatusRaw = toLowerSnake(response.paymentStatus);
+  const paymentStatus: AvailableOrder['paymentStatus'] = paymentStatusRaw === 'paid'
+    ? 'paid'
+    : paymentStatusRaw === 'partially_paid'
+      ? 'partial'
+      : paymentStatusRaw === 'refunded'
+        ? 'refunded'
+        : 'unpaid';
+
+  return {
+    id: String(response.orderId),
+    orderCode: response.orderCode,
+    customerUserId: '',
+    shippingAddressId: '',
+    orderStatus: toLowerSnake(response.orderStatus) as AvailableOrder['orderStatus'],
+    paymentStatus,
+    totalAmount: Number(response.totalAmount ?? 0),
+    items: (response.items ?? []).map((item, index) => ({
+      id: `${response.orderId}-${index}`,
+      availableOrderId: String(response.orderId),
+      productId: String(item.productId),
+      quantity: item.quantity,
+      unitPrice: Number(item.unitPrice ?? 0),
+      subtotal: Number(item.subtotal ?? 0),
+      product: {
+        id: String(item.productId),
+        categoryId: '',
+        name: item.productName,
+        slug: '',
+        description: '',
+        price: Number(item.unitPrice ?? 0),
+        productKind: 'standard_product',
+        isSellableDirectly: true,
+        isCustomSelectable: false,
+        imageUrl: '/placeholder.svg',
+        status: 'active',
+        createdAt: '',
+        updatedAt: '',
+      },
+    })),
+    orderedAt: response.orderedAt ?? '',
+  };
+}

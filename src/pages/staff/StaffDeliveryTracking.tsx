@@ -1,11 +1,12 @@
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { StatusBadge } from '@/components/shared/StatusBadge';
-import { mockAvailableOrders, mockCustomOrders, mockAddresses } from '@/data/mockData';
 import type { DeliveryStatus } from '@/types';
+import { deliveryTrackingApi } from '@/api';
+import { toast } from 'sonner';
 
 interface DeliveryRow {
   id: string;
@@ -16,37 +17,54 @@ interface DeliveryRow {
   orderedAt: string;
 }
 
-const mockDeliveryRows: DeliveryRow[] = [
-  ...mockAvailableOrders.map(o => {
-    const addr = mockAddresses.find(a => a.id === o.shippingAddressId);
-    return {
-      id: o.id,
-      orderCode: o.orderCode,
-      type: 'available' as const,
-      customerAddress: addr ? `${addr.addressLine}, ${addr.district}` : '—',
-      deliveryStatus: (o.orderStatus === 'completed' ? 'delivered' : o.orderStatus === 'shipping' ? 'shipped' : 'pending') as DeliveryStatus,
-      orderedAt: o.orderedAt,
-    };
-  }),
-  ...mockCustomOrders.map(o => {
-    const addr = mockAddresses.find(a => a.id === o.shippingAddressId);
-    return {
-      id: o.id,
-      orderCode: o.orderCode,
-      type: 'custom' as const,
-      customerAddress: addr ? `${addr.addressLine}, ${addr.district}` : '—',
-      deliveryStatus: (o.orderStatus === 'completed' ? 'delivered' : 'pending') as DeliveryStatus,
-      orderedAt: o.orderedAt,
-    };
-  }),
-];
+function mapStatus(status: string): DeliveryStatus {
+  const normalized = status?.toLowerCase();
+  if (normalized === 'shipped') {
+    return 'shipped';
+  }
+  if (normalized === 'delivered') {
+    return 'delivered';
+  }
+  if (normalized === 'failed') {
+    return 'failed';
+  }
+  return 'pending';
+}
 
 export default function StaffDeliveryTracking() {
   const [filter, setFilter] = useState<string>('all');
+  const [rows, setRows] = useState<DeliveryRow[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const filtered = filter === 'all'
-    ? mockDeliveryRows
-    : mockDeliveryRows.filter(r => r.deliveryStatus === filter);
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const response = await deliveryTrackingApi.getDeliveryTrackingRecords({ page: 0, limit: 200 });
+        setRows(
+          response.data.map(item => ({
+            id: `${item.trackingType}-${item.trackingRecordId}`,
+            orderCode: item.orderCode,
+            type: item.trackingType === 'CUSTOM_ORDER' ? 'custom' : 'available',
+            customerAddress: item.customerAddress || '—',
+            deliveryStatus: mapStatus(item.deliveryStatus),
+            orderedAt: item.orderedAt ? new Date(item.orderedAt).toLocaleDateString('vi-VN') : '—',
+          }))
+        );
+      } catch (error) {
+        const message = error instanceof Error ? error.message : 'Không thể tải dữ liệu giao nhận';
+        toast.error(message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    void load();
+  }, []);
+
+  const filtered = useMemo(
+    () => (filter === 'all' ? rows : rows.filter(r => r.deliveryStatus === filter)),
+    [rows, filter]
+  );
 
   return (
     <div className="space-y-6">
@@ -68,6 +86,7 @@ export default function StaffDeliveryTracking() {
 
       <Card>
         <CardContent className="p-0">
+          {loading && <p className="p-4 text-sm text-caption">Đang tải dữ liệu...</p>}
           <Table>
             <TableHeader>
               <TableRow>
@@ -76,7 +95,6 @@ export default function StaffDeliveryTracking() {
                 <TableHead>Địa chỉ giao</TableHead>
                 <TableHead>Trạng thái giao</TableHead>
                 <TableHead>Ngày đặt</TableHead>
-                <TableHead className="text-right">Cập nhật</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -88,22 +106,9 @@ export default function StaffDeliveryTracking() {
                       {row.type === 'custom' ? 'Custom' : 'Thường'}
                     </Badge>
                   </TableCell>
-                  <TableCell className="max-w-[200px] truncate">{row.customerAddress}</TableCell>
+                  <TableCell className="max-w-[240px] truncate">{row.customerAddress}</TableCell>
                   <TableCell><StatusBadge type="delivery" status={row.deliveryStatus} /></TableCell>
                   <TableCell>{row.orderedAt}</TableCell>
-                  <TableCell className="text-right">
-                    <Select defaultValue={row.deliveryStatus}>
-                      <SelectTrigger className="w-32 h-8">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="pending">Chờ giao</SelectItem>
-                        <SelectItem value="shipped">Đang giao</SelectItem>
-                        <SelectItem value="delivered">Đã giao</SelectItem>
-                        <SelectItem value="failed">Thất bại</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>

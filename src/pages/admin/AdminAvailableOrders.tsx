@@ -1,4 +1,4 @@
-import { mockAvailableOrders, getProductById } from '@/data/mockData';
+import { useEffect, useMemo, useState } from 'react';
 import { StatusBadge } from '@/components/shared/StatusBadge';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -6,18 +6,72 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { Search, Eye } from 'lucide-react';
-import { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { availableOrderApi } from '@/api';
+import { mapAvailableOrder } from '@/api/mappers';
+import type { AvailableOrder, AvailableOrderStatus } from '@/types';
+import { toast } from 'sonner';
+
+const nextStatusOptions: AvailableOrderStatus[] = ['processing', 'shipping', 'completed', 'canceled'];
 
 export default function AdminAvailableOrders() {
   const [search, setSearch] = useState('');
-  const [statusFilter, setStatusFilter] = useState('all');
+  const [statusFilter, setStatusFilter] = useState<AvailableOrderStatus | 'all'>('all');
+  const [orders, setOrders] = useState<AvailableOrder[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [statusUpdateMap, setStatusUpdateMap] = useState<Record<string, AvailableOrderStatus>>({});
 
-  const filtered = mockAvailableOrders.filter(o => {
-    const matchSearch = !search || o.orderCode.toLowerCase().includes(search.toLowerCase());
-    const matchStatus = statusFilter === 'all' || o.orderStatus === statusFilter;
-    return matchSearch && matchStatus;
-  });
+  const loadOrders = async () => {
+    try {
+      const response = await availableOrderApi.getAdminAvailableOrders({
+        page: 0,
+        limit: 100,
+        keyword: search || undefined,
+        orderStatus: statusFilter === 'all' ? undefined : statusFilter,
+      });
+      const mapped = response.data.map(mapAvailableOrder);
+      setOrders(mapped);
+      setStatusUpdateMap(
+        mapped.reduce<Record<string, AvailableOrderStatus>>((acc, order) => {
+          acc[order.id] = order.orderStatus;
+          return acc;
+        }, {})
+      );
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Không thể tải danh sách đơn thường';
+      toast.error(message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    void loadOrders();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [statusFilter]);
+
+  const filtered = useMemo(
+    () => orders.filter(o => !search || o.orderCode.toLowerCase().includes(search.toLowerCase())),
+    [orders, search]
+  );
+
+  const handleUpdateStatus = async (orderId: string) => {
+    const targetStatus = statusUpdateMap[orderId];
+    const targetOrder = orders.find(o => o.id === orderId);
+    if (!targetOrder || !targetStatus || targetOrder.orderStatus === targetStatus) {
+      return;
+    }
+
+    try {
+      await availableOrderApi.updateAdminAvailableOrderStatus(Number(orderId), { status: targetStatus });
+      toast.success('Cập nhật trạng thái đơn thành công');
+      await loadOrders();
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Cập nhật trạng thái thất bại';
+      toast.error(message);
+      setStatusUpdateMap(prev => ({ ...prev, [orderId]: targetOrder.orderStatus }));
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -30,7 +84,7 @@ export default function AdminAvailableOrders() {
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-caption" />
               <Input placeholder="Tìm mã đơn..." value={search} onChange={e => setSearch(e.target.value)} className="pl-10" />
             </div>
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <Select value={statusFilter} onValueChange={v => setStatusFilter(v as AvailableOrderStatus | 'all')}>
               <SelectTrigger className="w-48"><SelectValue /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Tất cả</SelectItem>
@@ -44,6 +98,7 @@ export default function AdminAvailableOrders() {
           </div>
         </CardHeader>
         <CardContent>
+          {loading && <p className="mb-4 text-sm text-caption">Đang tải dữ liệu...</p>}
           <Table>
             <TableHeader>
               <TableRow>
@@ -78,30 +133,29 @@ export default function AdminAvailableOrders() {
                             <StatusBadge type="payment" status={o.paymentStatus} />
                           </div>
                           <div className="space-y-2">
-                            {o.items?.map(item => {
-                              const prod = getProductById(item.productId);
-                              return (
-                                <div key={item.id} className="flex justify-between rounded-lg bg-surface-warm p-3 text-sm">
-                                  <span>{prod?.name} x{item.quantity}</span>
-                                  <span className="font-medium">{item.subtotal.toLocaleString('vi-VN')}₫</span>
-                                </div>
-                              );
-                            })}
+                            {o.items?.map(item => (
+                              <div key={item.id} className="flex justify-between rounded-lg bg-surface-warm p-3 text-sm">
+                                <span>{item.product?.name || item.productId} x{item.quantity}</span>
+                                <span className="font-medium">{item.subtotal.toLocaleString('vi-VN')}₫</span>
+                              </div>
+                            ))}
                           </div>
                           <div className="flex justify-between border-t pt-3 font-medium">
                             <span>Tổng</span>
                             <span>{o.totalAmount.toLocaleString('vi-VN')}₫</span>
                           </div>
-                          <Select>
+                          <Select
+                            value={statusUpdateMap[o.id] || o.orderStatus}
+                            onValueChange={value => setStatusUpdateMap(prev => ({ ...prev, [o.id]: value as AvailableOrderStatus }))}
+                          >
                             <SelectTrigger><SelectValue placeholder="Cập nhật trạng thái" /></SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="processing">Đang xử lý</SelectItem>
-                              <SelectItem value="shipping">Đang giao</SelectItem>
-                              <SelectItem value="completed">Hoàn thành</SelectItem>
-                              <SelectItem value="canceled">Hủy</SelectItem>
+                              {nextStatusOptions.map(status => (
+                                <SelectItem key={status} value={status}>{status}</SelectItem>
+                              ))}
                             </SelectContent>
                           </Select>
-                          <Button className="w-full rounded-full">Cập nhật</Button>
+                          <Button className="w-full rounded-full" onClick={() => void handleUpdateStatus(o.id)}>Cập nhật</Button>
                         </div>
                       </DialogContent>
                     </Dialog>
