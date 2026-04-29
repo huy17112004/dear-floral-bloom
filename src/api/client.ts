@@ -27,7 +27,7 @@ function getAccessToken(): string | null {
 
 type RequestOptions = Omit<AxiosRequestConfig, 'data' | 'params'> & {
   body?: unknown;
-  query?: QueryParams;
+  query?: object;
 };
 
 export async function apiRequest<T>(path: string, options: RequestOptions = {}): Promise<ApiResponse<T>> {
@@ -64,7 +64,7 @@ export async function apiRequest<T>(path: string, options: RequestOptions = {}):
   return payload;
 }
 
-function sanitizeQuery(query?: QueryParams): QueryParams | undefined {
+function sanitizeQuery(query?: object): QueryParams | undefined {
   if (!query) {
     return undefined;
   }
