@@ -29,9 +29,14 @@ export default function AdminDashboard() {
           adminCustomOrderApi.getAdminCustomOrders({ page: 0, limit: 3 }),
         ]);
 
-        setOverview(overviewRes.data);
-        setRevenueItems(revenueRes.data);
-        setRecentCustom(customRes.data.map(mapCustomOrder));
+        setOverview(overviewRes.data ?? {
+          totalProducts: 0,
+          totalOrders: 0,
+          processingOrders: 0,
+          completedOrders: 0,
+        });
+        setRevenueItems(Array.isArray(revenueRes.data) ? revenueRes.data : []);
+        setRecentCustom(Array.isArray(customRes.data) ? customRes.data.map(mapCustomOrder) : []);
       } catch (error) {
         const message = error instanceof Error ? error.message : 'Không thể tải dữ liệu dashboard';
         toast.error(message);
@@ -43,14 +48,14 @@ export default function AdminDashboard() {
 
   const revenueChartData = useMemo(
     () =>
-      revenueItems.map(item => ({
+      (Array.isArray(revenueItems) ? revenueItems : []).map(item => ({
         period: item.bucketDate,
-        revenue: item.totalRevenue,
+        revenue: Number(item.totalRevenue ?? 0),
       })),
     [revenueItems]
   );
 
-  const totalRevenue = revenueChartData.reduce((sum, item) => sum + item.revenue, 0);
+  const totalRevenue = revenueChartData.reduce((sum, item) => sum + Number(item.revenue || 0), 0);
 
   return (
     <div className="space-y-6">
@@ -74,7 +79,12 @@ export default function AdminDashboard() {
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(35 20% 88%)" />
                 <XAxis dataKey="period" tick={{ fontSize: 12 }} />
                 <YAxis tick={{ fontSize: 12 }} tickFormatter={v => `${v / 1000}k`} />
-                <Tooltip formatter={(value: number) => [`${value.toLocaleString('vi-VN')}₫`, 'Doanh thu']} />
+                <Tooltip
+                  formatter={(value: number | string) => [
+                    `${Number(value ?? 0).toLocaleString('vi-VN')}₫`,
+                    'Doanh thu',
+                  ]}
+                />
                 <Bar dataKey="revenue" fill="hsl(90 15% 55%)" radius={[6, 6, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
@@ -95,6 +105,9 @@ export default function AdminDashboard() {
         <Card>
           <CardHeader><CardTitle className="font-heading text-base">Đơn hàng custom gần đây</CardTitle></CardHeader>
           <CardContent className="space-y-3">
+            {recentCustom.length === 0 && (
+              <p className="text-sm text-caption">Chưa có đơn custom gần đây.</p>
+            )}
             {recentCustom.map(order => (
               <div key={order.id} className="flex items-center justify-between rounded-lg bg-surface-warm p-3">
                 <div>
@@ -110,4 +123,3 @@ export default function AdminDashboard() {
     </div>
   );
 }
-

@@ -6,8 +6,8 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 
 // Layouts
 import { CustomerLayout } from "@/components/customer/CustomerLayout";
-import { AdminLayout } from "@/components/admin/AdminLayout";
-import { StaffLayout } from "@/components/staff/StaffLayout";
+import { BackofficeLayout } from "@/components/backoffice/BackofficeLayout";
+import { RequireRole } from "@/components/auth/RequireRole";
 
 // Customer pages
 import HomePage from "@/pages/customer/HomePage";
@@ -42,11 +42,6 @@ import AdminReports from "@/pages/admin/AdminReports";
 
 // Staff pages
 import StaffDashboard from "@/pages/staff/StaffDashboard";
-import StaffAvailableOrders from "@/pages/staff/StaffAvailableOrders";
-import StaffCustomOrders from "@/pages/staff/StaffCustomOrders";
-import StaffProductList from "@/pages/staff/StaffProductList";
-import StaffPurchaseReceipts from "@/pages/staff/StaffPurchaseReceipts";
-import StaffInventory from "@/pages/staff/StaffInventory";
 import StaffDeliveryTracking from "@/pages/staff/StaffDeliveryTracking";
 
 import NotFound from "./pages/NotFound";
@@ -80,25 +75,51 @@ const App = () => (
           </Route>
 
           {/* Admin site */}
-          <Route element={<AdminLayout />}>
+          <Route
+            element={(
+              <RequireRole allowed={["admin"]}>
+                <BackofficeLayout role="admin" />
+              </RequireRole>
+            )}
+          >
             <Route path="/admin/dashboard" element={<AdminDashboard />} />
-            <Route path="/admin/users" element={<AdminUserList />} />
             <Route path="/admin/products" element={<AdminProductList />} />
             <Route path="/admin/orders/available" element={<AdminAvailableOrders />} />
             <Route path="/admin/orders/custom" element={<AdminCustomOrders />} />
             <Route path="/admin/purchase-receipts" element={<AdminPurchaseReceipts />} />
             <Route path="/admin/inventory" element={<AdminInventory />} />
-            <Route path="/admin/reports" element={<AdminReports />} />
+            <Route
+              path="/admin/users"
+              element={(
+                <RequireRole allowed={["admin"]}>
+                  <AdminUserList />
+                </RequireRole>
+              )}
+            />
+            <Route
+              path="/admin/reports"
+              element={(
+                <RequireRole allowed={["admin"]}>
+                  <AdminReports />
+                </RequireRole>
+              )}
+            />
           </Route>
 
           {/* Staff site */}
-          <Route element={<StaffLayout />}>
+          <Route
+            element={(
+              <RequireRole allowed={["staff"]}>
+                <BackofficeLayout role="staff" />
+              </RequireRole>
+            )}
+          >
             <Route path="/staff/dashboard" element={<StaffDashboard />} />
-            <Route path="/staff/orders/available" element={<StaffAvailableOrders />} />
-            <Route path="/staff/orders/custom" element={<StaffCustomOrders />} />
-            <Route path="/staff/products" element={<StaffProductList />} />
-            <Route path="/staff/purchase-receipts" element={<StaffPurchaseReceipts />} />
-            <Route path="/staff/inventory" element={<StaffInventory />} />
+            <Route path="/staff/orders/available" element={<AdminAvailableOrders />} />
+            <Route path="/staff/orders/custom" element={<AdminCustomOrders />} />
+            <Route path="/staff/products" element={<AdminProductList />} />
+            <Route path="/staff/purchase-receipts" element={<AdminPurchaseReceipts />} />
+            <Route path="/staff/inventory" element={<AdminInventory />} />
             <Route path="/staff/delivery" element={<StaffDeliveryTracking />} />
           </Route>
 

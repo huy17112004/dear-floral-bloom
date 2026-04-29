@@ -1,4 +1,4 @@
-import { Link, useLocation, Outlet } from 'react-router-dom';
+import { Link, useLocation, Outlet, useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 import {
   LayoutDashboard, Users, Package, ShoppingCart, Palette, FileText,
@@ -21,10 +21,16 @@ const sidebarLinks = [
 export function AdminLayout() {
   const [collapsed, setCollapsed] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    localStorage.removeItem('accessToken');
+    localStorage.removeItem('role');
+    navigate('/auth/login');
+  };
 
   return (
     <div className="flex min-h-screen">
-      {/* Sidebar */}
       <aside
         className={cn(
           'fixed left-0 top-0 z-40 flex h-screen flex-col border-r bg-sidebar transition-all duration-300',
@@ -71,19 +77,18 @@ export function AdminLayout() {
         </nav>
 
         <div className="border-t border-sidebar-border p-2">
-          <Link
-            to="/"
-            className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-sidebar-foreground hover:bg-sidebar-accent transition-colors"
+          <button
+            type="button"
+            onClick={handleLogout}
+            className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-sidebar-foreground transition-colors hover:bg-sidebar-accent"
           >
             <LogOut className="h-5 w-5 shrink-0" />
-            {!collapsed && <span>Về trang chủ</span>}
-          </Link>
+            {!collapsed && <span>Đăng xuất</span>}
+          </button>
         </div>
       </aside>
 
-      {/* Main content */}
       <div className={cn('flex-1 transition-all duration-300', collapsed ? 'ml-16' : 'ml-64')}>
-        {/* Topbar */}
         <header className="sticky top-0 z-30 flex h-16 items-center border-b bg-background/95 px-6 backdrop-blur">
           <h2 className="font-heading text-lg font-semibold text-heading">
             {sidebarLinks.find(l => location.pathname.startsWith(l.path))?.label || 'Admin'}

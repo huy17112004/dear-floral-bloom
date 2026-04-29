@@ -47,6 +47,7 @@ export interface ProductUpsertRequest {
   flowerType?: string;
   status: string;
   image?: File;
+  images?: File[];
 }
 
 function toProductFormData(payload: ProductUpsertRequest): FormData {
@@ -65,6 +66,11 @@ function toProductFormData(payload: ProductUpsertRequest): FormData {
   if (payload.flowerType) formData.append('flowerType', payload.flowerType);
   if (payload.imageUrl) formData.append('imageUrl', payload.imageUrl);
   if (payload.image) formData.append('imageFile', payload.image);
+  if (payload.images && payload.images.length > 0) {
+    payload.images.forEach(image => {
+      formData.append('imageFiles', image);
+    });
+  }
 
   return formData;
 }

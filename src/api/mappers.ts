@@ -4,6 +4,7 @@ import type { AddressResponse } from '@/api/meApi';
 import type { CategoryResponse } from '@/api/categoryApi';
 import type { CustomOrderResponse } from '@/api/customOrderApi';
 import type { ProductResponse } from '@/api/productApi';
+import { resolveImageUrl } from '@/lib/image';
 
 function toLowerSnake(value?: string): string {
   return (value ?? '').toLowerCase();
@@ -39,7 +40,7 @@ export function mapProduct(response: ProductResponse): Product {
     productKind,
     isSellableDirectly: !!response.isSellableDirectly,
     isCustomSelectable: !!response.isCustomSelectable,
-    imageUrl: response.imageUrl || '/placeholder.svg',
+    imageUrl: resolveImageUrl(response.imageUrl),
     size: response.size ?? undefined,
     material: response.material ?? undefined,
     flowerType: response.flowerType ?? undefined,

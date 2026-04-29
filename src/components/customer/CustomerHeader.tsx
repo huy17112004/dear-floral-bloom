@@ -1,4 +1,4 @@
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 import { Menu, X, User, ShoppingBag, Flower2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -13,7 +13,15 @@ const navLinks = [
 
 export function CustomerHeader() {
   const location = useLocation();
+  const navigate = useNavigate();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const isLoggedIn = Boolean(localStorage.getItem('accessToken'));
+
+  const handleLogout = () => {
+    localStorage.removeItem('accessToken');
+    localStorage.removeItem('role');
+    navigate('/auth/login');
+  };
 
   return (
     <header className="sticky top-0 z-50 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
@@ -23,7 +31,6 @@ export function CustomerHeader() {
           <span className="font-heading text-xl font-semibold text-heading">Dear Floral</span>
         </Link>
 
-        {/* Desktop nav */}
         <nav className="hidden items-center gap-8 md:flex">
           {navLinks.map(link => (
             <Link
@@ -39,16 +46,35 @@ export function CustomerHeader() {
         </nav>
 
         <div className="flex items-center gap-3">
-          <Link to="/account/orders">
-            <Button variant="ghost" size="icon" className="text-foreground">
-              <ShoppingBag className="h-5 w-5" />
+          {isLoggedIn && (
+            <>
+              <Link to="/account/orders">
+                <Button variant="ghost" size="icon" className="text-foreground">
+                  <ShoppingBag className="h-5 w-5" />
+                </Button>
+              </Link>
+              <Link to="/account/profile">
+                <Button variant="ghost" size="icon" className="text-foreground">
+                  <User className="h-5 w-5" />
+                </Button>
+              </Link>
+            </>
+          )}
+
+          {isLoggedIn ? (
+            <Button variant="outline" className="hidden md:inline-flex" onClick={handleLogout}>
+              Đăng xuất
             </Button>
-          </Link>
-          <Link to="/account/profile">
-            <Button variant="ghost" size="icon" className="text-foreground">
-              <User className="h-5 w-5" />
+          ) : (
+            <Button
+              variant="outline"
+              className="hidden md:inline-flex"
+              onClick={() => navigate('/auth/login')}
+            >
+              Đăng nhập
             </Button>
-          </Link>
+          )}
+
           <Button
             variant="ghost"
             size="icon"
@@ -60,7 +86,6 @@ export function CustomerHeader() {
         </div>
       </div>
 
-      {/* Mobile nav */}
       {mobileOpen && (
         <nav className="border-t bg-background p-4 md:hidden">
           {navLinks.map(link => (
@@ -75,13 +100,30 @@ export function CustomerHeader() {
               {link.label}
             </Link>
           ))}
-          <div className="mt-3 flex gap-2 border-t pt-3">
-            <Link to="/auth/login" className="flex-1" onClick={() => setMobileOpen(false)}>
-              <Button variant="outline" className="w-full">Đăng nhập</Button>
-            </Link>
-            <Link to="/auth/register" className="flex-1" onClick={() => setMobileOpen(false)}>
-              <Button className="w-full">Đăng ký</Button>
-            </Link>
+          <div className="mt-3 border-t pt-3">
+            {isLoggedIn ? (
+              <Button
+                variant="outline"
+                className="w-full"
+                onClick={() => {
+                  setMobileOpen(false);
+                  handleLogout();
+                }}
+              >
+                Đăng xuất
+              </Button>
+            ) : (
+              <Button
+                variant="outline"
+                className="w-full"
+                onClick={() => {
+                  setMobileOpen(false);
+                  navigate('/auth/login');
+                }}
+              >
+                Đăng nhập
+              </Button>
+            )}
           </div>
         </nav>
       )}
