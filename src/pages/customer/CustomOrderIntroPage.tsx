@@ -32,7 +32,12 @@ export default function CustomOrderIntroPage() {
           <img src={heroImage} alt="Nghệ nhân Dear Floral đang sắp đặt hoa cưới ép khô trong khung gỗ" className="h-full w-full object-cover" />
           <div className="absolute inset-0 bg-foreground/20" />
           <div className="absolute inset-0 z-10 flex items-center justify-center px-6 text-center">
-            <h1 className="font-heading text-6xl font-bold uppercase tracking-[0.12em] text-secondary drop-shadow-lg md:text-8xl lg:text-9xl">Dear Floral</h1>
+            <h1
+              className="font-heading font-bold uppercase text-secondary drop-shadow-lg"
+              style={{ fontSize: 'clamp(4rem, 9vw, 8rem)', letterSpacing: '0.12em', lineHeight: 1 }}
+            >
+              Dear Floral
+            </h1>
           </div>
         </div>
         <div className="absolute -bottom-px left-0 h-28 w-full bg-sage-light [clip-path:polygon(0_0,50%_100%,100%_0,100%_100%,0_100%)]" />
