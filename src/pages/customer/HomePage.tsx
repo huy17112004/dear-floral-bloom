@@ -7,6 +7,7 @@ import { productApi } from '@/api';
 import { mapProduct } from '@/api/mappers';
 import type { Product } from '@/types';
 import { toast } from 'sonner';
+import customHeroImage from '@/assets/custom-order/press-workshop.jpg';
 
 export default function HomePage() {
   const [featuredProducts, setFeaturedProducts] = useState<Product[]>([]);
@@ -32,17 +33,24 @@ export default function HomePage() {
   return (
     <div>
       {/* Hero */}
-      <section className="relative overflow-hidden bg-secondary/30">
-        <div className="container flex flex-col items-center py-20 text-center md:py-32">
-          <div className="mb-6 inline-flex items-center gap-2 rounded-full bg-primary/10 px-4 py-1.5 text-sm font-medium text-primary">
+      <section className="relative isolate overflow-hidden bg-sidebar">
+        <img
+          src={customHeroImage}
+          alt="Bàn thủ công với hoa ép khô và khung tranh Dear Floral"
+          className="absolute inset-0 h-full w-full object-cover"
+        />
+        <div className="absolute inset-0 bg-sidebar/45" />
+        <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-sidebar/70 to-sidebar/0" />
+        <div className="container relative z-10 flex flex-col items-center py-20 text-center md:py-32">
+          <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-secondary/50 bg-sidebar/35 px-4 py-1.5 text-sm font-medium text-secondary backdrop-blur-sm">
             <Flower2 className="h-4 w-4" />
             Nghệ thuật hoa ép khô thủ công
           </div>
-          <h1 className="max-w-3xl font-heading text-4xl font-bold leading-tight text-heading md:text-6xl">
+          <h1 className="max-w-3xl font-heading text-4xl font-bold leading-tight text-secondary drop-shadow-sm md:text-6xl">
             Lưu giữ vẻ đẹp <br />
-            <span className="text-primary">vĩnh cửu</span> của thiên nhiên
+            <span className="text-accent">vĩnh cửu</span> của thiên nhiên
           </h1>
-          <p className="mt-6 max-w-xl text-lg text-body leading-relaxed">
+          <p className="mt-6 max-w-xl text-lg text-secondary/90 leading-relaxed drop-shadow-sm">
             Mỗi tác phẩm của Dear Floral là một câu chuyện được kể bằng hoa — ép khô, sắp đặt và lưu giữ
             trong khung tranh thủ công tinh tế.
           </p>
