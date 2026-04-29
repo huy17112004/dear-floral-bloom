@@ -102,7 +102,7 @@ export default function AdminCustomOrders() {
                               <StatusBadge type="flowerEval" status={o.flowerEvaluationStatus} />
                             </div>
                             <div className="space-y-2 text-sm">
-                              <div className="flex justify-between"><span className="text-caption">Khung</span><span>{frame?.name}</span></div>
+                              <div className="flex justify-between"><span className="text-caption">Khung</span><span>{o.selectedFrame?.name || '—'}</span></div>
                               <div className="flex justify-between"><span className="text-caption">Loại hoa</span><span>{o.flowerType}</span></div>
                               <div className="flex justify-between"><span className="text-caption">Yêu cầu</span><span className="text-right max-w-[60%]">{o.personalizationContent}</span></div>
                               <div className="flex justify-between"><span className="text-caption">Đặt cọc</span><span>{o.depositAmount.toLocaleString('vi-VN')}₫</span></div>
