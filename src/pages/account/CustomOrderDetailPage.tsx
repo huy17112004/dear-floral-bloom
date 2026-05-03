@@ -97,6 +97,9 @@ export default function CustomOrderDetailPage() {
       </div>
 
       <div className="space-y-6">
+        {/* Progress timeline */}
+        <CustomOrderProgress currentStatus={order.orderStatus} />
+
         {/* Order info */}
         <Card>
           <CardHeader><CardTitle className="font-heading text-base">Thông tin đơn hàng</CardTitle></CardHeader>
