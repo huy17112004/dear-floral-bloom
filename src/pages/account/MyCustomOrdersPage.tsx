@@ -5,7 +5,7 @@ import { EmptyState } from '@/components/shared/EmptyState';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ArrowRight, Sparkles, Calendar, Package } from 'lucide-react';
+import { ArrowRight, Sparkles, Calendar } from 'lucide-react';
 import { customOrderApi } from '@/api';
 import { mapCustomOrder } from '@/api/mappers';
 import { getCustomOrderStepLabel } from '@/components/shared/CustomOrderProgress';
@@ -93,7 +93,6 @@ export default function MyCustomOrdersPage() {
         <div className="py-16 text-center text-caption">Đang tải...</div>
       ) : filtered.length === 0 ? (
         <EmptyState
-          icon={Package}
           title="Chưa có đơn nào"
           description="Bắt đầu hành trình lưu giữ vẻ đẹp của bạn ngay hôm nay."
           action={
