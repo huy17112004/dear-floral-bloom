@@ -7,6 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { ArrowLeft } from 'lucide-react';
 import { customOrderApi } from '@/api';
 import { mapCustomOrder } from '@/api/mappers';
+import { CustomOrderProgress } from '@/components/shared/CustomOrderProgress';
 import type { CustomDemo, CustomOrder } from '@/types';
 import { toast } from 'sonner';
 
@@ -96,6 +97,9 @@ export default function CustomOrderDetailPage() {
       </div>
 
       <div className="space-y-6">
+        {/* Progress timeline */}
+        <CustomOrderProgress currentStatus={order.orderStatus} />
+
         {/* Order info */}
         <Card>
           <CardHeader><CardTitle className="font-heading text-base">Thông tin đơn hàng</CardTitle></CardHeader>
