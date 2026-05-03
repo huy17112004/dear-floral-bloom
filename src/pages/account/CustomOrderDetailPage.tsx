@@ -7,6 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { ArrowLeft } from 'lucide-react';
 import { customOrderApi } from '@/api';
 import { mapCustomOrder } from '@/api/mappers';
+import { CustomOrderProgress } from '@/components/shared/CustomOrderProgress';
 import type { CustomDemo, CustomOrder } from '@/types';
 import { toast } from 'sonner';
 
