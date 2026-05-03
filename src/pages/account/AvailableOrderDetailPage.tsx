@@ -15,13 +15,15 @@ export default function AvailableOrderDetailPage() {
 
   useEffect(() => {
     const load = async () => {
-      if (!id) {
+      const orderId = Number(id);
+      if (!id || !Number.isFinite(orderId) || orderId <= 0) {
+        toast.error('Mã đơn hàng không hợp lệ');
         setLoading(false);
         return;
       }
 
       try {
-        const response = await availableOrderApi.getAvailableOrderDetail(Number(id));
+        const response = await availableOrderApi.getAvailableOrderDetail(orderId);
         setOrder(mapAvailableOrder(response.data));
       } catch (error) {
         const message = error instanceof Error ? error.message : 'Không thể tải chi tiết đơn hàng';
