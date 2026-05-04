@@ -4,8 +4,8 @@ import { ArrowRight, Sparkles, Upload, Eye, MessageSquare, CreditCard } from 'lu
 
 const steps = [
   { icon: Sparkles, title: 'Chọn khung tranh', desc: 'Chọn khung tranh bạn yêu thích từ bộ sưu tập của chúng tôi' },
-  { icon: Upload, title: 'Gửi hoa & yêu cầu', desc: 'Upload ảnh hoa thật và mô tả thiết kế mong muốn' },
-  { icon: Eye, title: 'Xem demo', desc: 'Nhận bản demo và phản hồi chỉnh sửa cho đến khi hài lòng' },
+  { icon: Upload, title: 'Gửi hoa & yêu cầu', desc: 'Upload ảnh hoa thật và mô tả thiết kế mong muốn để đặt hàng' },
+  { icon: Eye, title: 'Xem demo', desc: 'Nhận bản demo và phản hồi chỉnh sửa cho đến khi hài lòng, miễn phí chỉnh sửa demo đến 3 lần.' },
   { icon: CreditCard, title: 'Thanh toán & nhận hàng', desc: 'Thanh toán phần còn lại và nhận tác phẩm hoàn thiện' },
 ];
 
@@ -21,8 +21,8 @@ export default function CustomOrderIntroPage() {
           Biến bó hoa kỷ niệm thành tác phẩm nghệ thuật
         </h1>
         <p className="mt-4 text-lg text-body leading-relaxed">
-          Hoa cưới, hoa sinh nhật, hay bất kỳ bó hoa nào bạn muốn giữ mãi — chúng tôi sẽ ép khô
-          và sắp đặt chúng trong khung tranh thủ công tinh tế.
+          Hoa cưới, hoa sinh nhật, hay bất kỳ bó hoa nào bạn muốn lưu giữ - chúng tôi sẽ ép khô
+          và thiết kế chúng trong khung tranh thủ công tinh tế.
         </p>
       </div>
 
@@ -48,8 +48,7 @@ export default function CustomOrderIntroPage() {
         <MessageSquare className="mx-auto mb-3 h-8 w-8 text-accent" />
         <h3 className="font-heading text-lg font-semibold text-heading">Chính sách đặt cọc</h3>
         <p className="mt-2 text-sm text-body leading-relaxed">
-          Bạn sẽ đặt cọc trước khi bắt đầu. Sau khi demo được duyệt, thanh toán phần còn lại để nhận sản phẩm.
-          Miễn phí chỉnh sửa demo đến 3 lần.
+          Đặt cọc trước 50% giá trị đơn hàng để xác nhận và bắt đầu thực hiện sản phẩm custom, phần còn lại sẽ được thanh toán khi hoàn thiện sản phẩm.
         </p>
       </div>
 
