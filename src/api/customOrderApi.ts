@@ -5,6 +5,12 @@ export interface CustomOrderResponse {
   orderCode: string;
   selectedFrameProductId: number;
   selectedFrameName?: string;
+  shippingReceiverName?: string;
+  shippingReceiverPhone?: string;
+  shippingAddressLine?: string;
+  shippingWard?: string;
+  shippingDistrict?: string;
+  shippingProvince?: string;
   orderStatus: string;
   paymentStatus: string;
   depositAmount: number;
@@ -16,6 +22,10 @@ export interface CustomOrderResponse {
   flowerInputImageUrl?: string;
   flowerEvaluationStatus?: string;
   flowerEvaluationNote?: string;
+  rejectionReason?: string;
+  refundBankName?: string;
+  refundAccountNumber?: string;
+  refundAccountName?: string;
   demoRevisionCount?: number;
   extraRevisionFeeRate?: number;
   orderedAt?: string;
@@ -26,6 +36,7 @@ export interface CustomDemoResponse {
   orderId: number;
   versionNo: number;
   demoImageUrl: string;
+  demoImages?: string[];
   demoDescription?: string;
   customerResponseStatus?: string;
   customerFeedback?: string;
@@ -79,11 +90,24 @@ export interface DemoFeedbackResponse {
   revisionCount: number;
 }
 
+export interface SubmitRefundInfoRequest {
+  refundBankName: string;
+  refundAccountNumber: string;
+  refundAccountName: string;
+}
+
 export function createCustomOrder(payload: CreateCustomOrderRequest) {
   return apiRequest<CreateCustomOrderResponse>('/api/orders/custom', {
     method: 'POST',
     body: payload,
   });
+}
+
+export function confirmDepositTransfer(orderId: number) {
+  return apiRequest<{ orderId: number; orderCode: string; status: string }>(
+    `/api/orders/custom/${orderId}/confirm-deposit`,
+    { method: 'POST' },
+  );
 }
 
 export function getMyCustomOrders(query: PaginatedQuery = {}) {
@@ -107,6 +131,16 @@ export function getCustomOrderDemos(orderId: number) {
 
 export function feedbackCustomOrderDemo(orderId: number, demoId: number, payload: DemoFeedbackRequest) {
   return apiRequest<DemoFeedbackResponse>(`/api/orders/custom/${orderId}/demos/${demoId}/feedback`, {
+    method: 'POST',
+    body: {
+      ...payload,
+      action: payload.action.toUpperCase(),
+    },
+  });
+}
+
+export function submitCustomOrderRefundInfo(orderId: number, payload: SubmitRefundInfoRequest) {
+  return apiRequest<{ orderId: number; orderCode: string; status: string }>(`/api/orders/custom/${orderId}/refund-info`, {
     method: 'POST',
     body: payload,
   });

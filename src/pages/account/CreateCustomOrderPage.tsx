@@ -1,18 +1,145 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { AddressCard } from '@/components/shared/AddressCard';
-import { ArrowLeft, Check } from 'lucide-react';
+import { ArrowLeft, Check, BanknoteIcon, QrCode, Clock } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { customOrderApi, meApi, productApi } from '@/api';
 import { mapAddress, mapProduct } from '@/api/mappers';
 import type { CustomerAddress, Product } from '@/types';
 import { toast } from 'sonner';
 
+// ─── Bank info (hardcoded – update manually later) ────────────────────────────
+const BANK_INFO = {
+  bankName: 'Vietcombank',
+  accountNumber: '1234567890',
+  accountHolder: 'NGUYEN VAN A',
+};
+
+// ─── QR Payment Screen ────────────────────────────────────────────────────────
+function DepositPaymentScreen({
+  orderId,
+  orderCode,
+  depositAmount,
+  onConfirmed,
+}: {
+  orderId: number;
+  orderCode: string;
+  depositAmount: number;
+  onConfirmed: () => void;
+}) {
+  const [confirming, setConfirming] = useState(false);
+  const navigate = useNavigate();
+
+  const qrContent = `${BANK_INFO.bankName}|${BANK_INFO.accountNumber}|${depositAmount}|${orderCode}`;
+  const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(qrContent)}`;
+
+  const handleConfirm = async () => {
+    try {
+      setConfirming(true);
+      await customOrderApi.confirmDepositTransfer(orderId);
+      toast.success('Đã gửi xác nhận, chờ cửa hàng kiểm tra!');
+      onConfirmed();
+      navigate(`/account/custom-orders/${orderId}`);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Không thể xác nhận';
+      toast.error(message);
+    } finally {
+      setConfirming(false);
+    }
+  };
+
+  return (
+    <div className="container max-w-2xl py-8">
+      <h1 className="mb-2 font-heading text-2xl font-bold text-heading">Thanh toán đặt cọc</h1>
+      <p className="mb-6 text-sm text-caption">
+        Mã đơn: <span className="font-medium text-heading">{orderCode}</span>
+      </p>
+
+      <div className="grid gap-6 md:grid-cols-2">
+        {/* QR Code */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="font-heading flex items-center gap-2 text-base">
+              <QrCode className="h-4 w-4" /> Quét QR chuyển khoản
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="flex flex-col items-center gap-3">
+            <img
+              src={qrUrl}
+              alt="QR Code chuyển khoản"
+              className="h-48 w-48 rounded-lg border"
+            />
+            <p className="text-xs text-caption">Quét bằng app ngân hàng bất kỳ</p>
+          </CardContent>
+        </Card>
+
+        {/* Bank info */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="font-heading flex items-center gap-2 text-base">
+              <BanknoteIcon className="h-4 w-4" /> Thông tin chuyển khoản
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3 text-sm">
+            <div className="flex justify-between">
+              <span className="text-caption">Ngân hàng</span>
+              <span className="font-medium text-heading">{BANK_INFO.bankName}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-caption">Số tài khoản</span>
+              <span className="font-mono font-semibold text-heading">{BANK_INFO.accountNumber}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-caption">Chủ tài khoản</span>
+              <span className="font-medium text-heading">{BANK_INFO.accountHolder}</span>
+            </div>
+            <div className="flex justify-between border-t pt-2">
+              <span className="text-caption">Số tiền cọc</span>
+              <span className="font-bold text-primary">
+                {depositAmount.toLocaleString('vi-VN')}₫
+              </span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-caption">Nội dung CK</span>
+              <span className="font-mono font-semibold text-heading">{orderCode}</span>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Notice */}
+      <div className="mt-4 flex items-start gap-2 rounded-xl bg-amber-50 border border-amber-200 p-3 text-sm text-amber-800">
+        <Clock className="mt-0.5 h-4 w-4 shrink-0" />
+        <p>
+          Sau khi chuyển khoản, nhấn <strong>"Tôi đã chuyển tiền"</strong> để thông báo cửa hàng.
+          Đơn hàng sẽ được xác nhận trong vòng 1–2 giờ làm việc.
+        </p>
+      </div>
+
+      <div className="mt-6 flex flex-col gap-3 sm:flex-row">
+        <Button
+          className="flex-1 rounded-full"
+          onClick={() => void handleConfirm()}
+          disabled={confirming}
+        >
+          {confirming ? 'Đang gửi...' : '✅ Tôi đã chuyển tiền'}
+        </Button>
+        <Link to={`/account/custom-orders/${orderId}`} className="flex-1">
+          <Button variant="outline" className="w-full rounded-full">
+            Xem đơn hàng
+          </Button>
+        </Link>
+      </div>
+    </div>
+  );
+}
+
+// ─── Create Form ──────────────────────────────────────────────────────────────
 export default function CreateCustomOrderPage() {
   const [frames, setFrames] = useState<Product[]>([]);
   const [addresses, setAddresses] = useState<CustomerAddress[]>([]);
@@ -22,7 +149,13 @@ export default function CreateCustomOrderPage() {
   const [personalizationContent, setPersonalizationContent] = useState('');
   const [requestedDeliveryDate, setRequestedDeliveryDate] = useState('');
   const [flowerInputImage, setFlowerInputImage] = useState('');
-  const [depositPaymentMethod, setDepositPaymentMethod] = useState('bank_transfer');
+
+  // After successful creation
+  const [createdOrder, setCreatedOrder] = useState<{
+    orderId: number;
+    orderCode: string;
+    depositAmount: number;
+  } | null>(null);
 
   useEffect(() => {
     const load = async () => {
@@ -45,29 +178,53 @@ export default function CreateCustomOrderPage() {
     void load();
   }, []);
 
+  const selectedFrameObj = frames.find(f => f.id === selectedFrame);
+
   const onSubmit = async () => {
-    if (!selectedFrame || !selectedAddress || !flowerType || !flowerInputImage) {
+    if (!selectedFrame || !selectedAddress || !flowerType) {
       toast.error('Vui lòng nhập đủ thông tin bắt buộc');
       return;
     }
 
     try {
-      await customOrderApi.createCustomOrder({
+      const response = await customOrderApi.createCustomOrder({
         selectedFrameProductId: Number(selectedFrame),
         shippingAddressId: Number(selectedAddress),
         flowerType,
         personalizationContent,
         requestedDeliveryDate: requestedDeliveryDate || undefined,
-        flowerInputImage,
-        depositPaymentMethod,
+        flowerInputImage: flowerInputImage || undefined,
+        depositPaymentMethod: 'bank_transfer',
       });
-      toast.success('Tạo đơn custom thành công');
+
+      const depositAmount = selectedFrameObj
+        ? Math.round(selectedFrameObj.price * 0.5)
+        : 0;
+
+      setCreatedOrder({
+        orderId: response.data.orderId,
+        orderCode: response.data.orderCode,
+        depositAmount,
+      });
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Tạo đơn custom thất bại';
       toast.error(message);
     }
   };
 
+  // ── Show payment screen after creation ──
+  if (createdOrder) {
+    return (
+      <DepositPaymentScreen
+        orderId={createdOrder.orderId}
+        orderCode={createdOrder.orderCode}
+        depositAmount={createdOrder.depositAmount}
+        onConfirmed={() => setCreatedOrder(null)}
+      />
+    );
+  }
+
+  // ── Create form ──
   return (
     <div className="container max-w-3xl py-8">
       <Link to="/custom-order" className="mb-6 inline-flex items-center gap-1 text-sm text-caption hover:text-primary">
@@ -116,7 +273,7 @@ export default function CreateCustomOrderPage() {
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
-              <Label>Loại hoa</Label>
+              <Label>Loại hoa *</Label>
               <Input placeholder="VD: Hoa hồng, hoa cúc..." className="mt-1" value={flowerType} onChange={e => setFlowerType(e.target.value)} />
             </div>
             <div>
@@ -141,7 +298,7 @@ export default function CreateCustomOrderPage() {
                 value={flowerInputImage}
                 onChange={e => setFlowerInputImage(e.target.value)}
               />
-              <p className="mt-1 text-xs text-caption">Backend hiện nhận chuỗi URL cho flowerInputImage.</p>
+              <p className="mt-1 text-xs text-caption">Nhập URL ảnh hoa bạn cung cấp.</p>
             </div>
           </CardContent>
         </Card>
@@ -164,24 +321,35 @@ export default function CreateCustomOrderPage() {
           </CardContent>
         </Card>
 
-        {/* Step 4: Deposit */}
+        {/* Step 4: Deposit info */}
         <Card>
           <CardHeader>
             <CardTitle className="font-heading text-base">4. Đặt cọc</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             <p className="text-sm text-body">
-              Sau khi gửi yêu cầu, bạn sẽ cần thanh toán đặt cọc theo chính sách của Dear Floral.
+              Sau khi gửi yêu cầu, hệ thống sẽ hiển thị thông tin chuyển khoản đặt cọc <strong>50%</strong> giá trị đơn hàng.
             </p>
-            <div className="rounded-lg bg-surface-warm p-3 text-sm">
-              <div className="flex justify-between"><span className="text-caption">Phương thức</span><span className="text-heading">Chuyển khoản ngân hàng</span></div>
-            </div>
+            {selectedFrameObj && (
+              <div className="rounded-lg bg-surface-warm p-3 text-sm space-y-1">
+                <div className="flex justify-between">
+                  <span className="text-caption">Giá trị khung</span>
+                  <span className="text-heading">{selectedFrameObj.price.toLocaleString('vi-VN')}₫</span>
+                </div>
+                <div className="flex justify-between font-medium">
+                  <span className="text-caption">Tiền cọc (50%)</span>
+                  <span className="text-primary">{Math.round(selectedFrameObj.price * 0.5).toLocaleString('vi-VN')}₫</span>
+                </div>
+              </div>
+            )}
           </CardContent>
         </Card>
 
         <div className="flex justify-end gap-3">
           <Link to="/custom-order"><Button variant="outline" className="rounded-full">Hủy</Button></Link>
-          <Button onClick={onSubmit} className="rounded-full px-8">Gửi yêu cầu đặt hàng</Button>
+          <Button onClick={() => void onSubmit()} className="rounded-full px-8">
+            Gửi yêu cầu đặt hàng
+          </Button>
         </div>
       </div>
     </div>

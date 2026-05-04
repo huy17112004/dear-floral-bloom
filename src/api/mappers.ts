@@ -68,11 +68,35 @@ export function mapAddress(response: AddressResponse): CustomerAddress {
 }
 
 export function mapCustomOrder(response: CustomOrderResponse): CustomOrder {
+  const paymentStatusRaw = toLowerSnake(response.paymentStatus);
+  const paymentStatus: CustomOrder['paymentStatus'] = paymentStatusRaw === 'paid'
+    ? 'paid'
+    : paymentStatusRaw === 'partially_paid'
+      ? 'partial'
+      : paymentStatusRaw === 'refunded'
+        ? 'refunded'
+        : 'unpaid';
+
   return {
     id: String(response.id),
     orderCode: response.orderCode,
     customerUserId: '',
     shippingAddressId: '',
+    shippingAddress: response.shippingReceiverName
+      ? {
+          id: '',
+          customerUserId: '',
+          receiverName: response.shippingReceiverName,
+          receiverPhone: response.shippingReceiverPhone ?? '',
+          addressLine: response.shippingAddressLine ?? '',
+          ward: response.shippingWard ?? '',
+          district: response.shippingDistrict ?? '',
+          province: response.shippingProvince ?? '',
+          isDefault: false,
+          createdAt: '',
+          updatedAt: '',
+        }
+      : undefined,
     selectedFrameProductId: String(response.selectedFrameProductId),
     selectedFrame: response.selectedFrameName
       ? {
@@ -92,7 +116,7 @@ export function mapCustomOrder(response: CustomOrderResponse): CustomOrder {
         }
       : undefined,
     orderStatus: toLowerSnake(response.orderStatus) as CustomOrder['orderStatus'],
-    paymentStatus: toLowerSnake(response.paymentStatus) as CustomOrder['paymentStatus'],
+    paymentStatus,
     depositAmount: Number(response.depositAmount ?? 0),
     remainingAmount: Number(response.remainingAmount ?? 0),
     totalAmount: Number(response.totalAmount ?? 0),
@@ -102,6 +126,10 @@ export function mapCustomOrder(response: CustomOrderResponse): CustomOrder {
     flowerInputImageUrl: response.flowerInputImageUrl,
     flowerEvaluationStatus: toLowerSnake(response.flowerEvaluationStatus) as CustomOrder['flowerEvaluationStatus'],
     flowerEvaluationNote: response.flowerEvaluationNote ?? undefined,
+    rejectionReason: response.rejectionReason ?? undefined,
+    refundBankName: response.refundBankName ?? undefined,
+    refundAccountNumber: response.refundAccountNumber ?? undefined,
+    refundAccountName: response.refundAccountName ?? undefined,
     demoRevisionCount: response.demoRevisionCount ?? 0,
     extraRevisionFeeRate: response.extraRevisionFeeRate ?? undefined,
     orderedAt: response.orderedAt ?? '',

@@ -11,11 +11,18 @@ const availableOrderLabels: Record<AvailableOrderStatus, { label: string; classN
 };
 
 const customOrderLabels: Record<CustomOrderStatus, { label: string; className: string }> = {
+  pending_deposit: { label: 'Chờ đặt cọc', className: 'bg-yellow-100 text-yellow-800 border-yellow-200' },
+  pending_deposit_verification: { label: 'Đang xác nhận cọc', className: 'bg-sky-100 text-sky-800 border-sky-200' },
   deposited: { label: 'Đã đặt cọc', className: 'bg-blue-100 text-blue-800 border-blue-200' },
   waiting_flower_review: { label: 'Chờ đánh giá hoa', className: 'bg-amber-100 text-amber-800 border-amber-200' },
   in_progress: { label: 'Đang thực hiện', className: 'bg-indigo-100 text-indigo-800 border-indigo-200' },
   waiting_demo_feedback: { label: 'Chờ duyệt demo', className: 'bg-purple-100 text-purple-800 border-purple-200' },
   waiting_remaining_payment: { label: 'Chờ thanh toán', className: 'bg-orange-100 text-orange-800 border-orange-200' },
+  waiting_remaining_payment_verification: { label: 'Chờ xác nhận thanh toán', className: 'bg-cyan-100 text-cyan-800 border-cyan-200' },
+  delivering: { label: 'Đang giao hàng', className: 'bg-blue-100 text-blue-800 border-blue-200' },
+  waiting_refund_info: { label: 'Chờ thông tin hoàn tiền', className: 'bg-rose-100 text-rose-800 border-rose-200' },
+  waiting_refund: { label: 'Chờ hoàn tiền', className: 'bg-red-100 text-red-800 border-red-200' },
+  refunded: { label: 'Đã hoàn tiền', className: 'bg-emerald-100 text-emerald-800 border-emerald-200' },
   completed: { label: 'Hoàn thành', className: 'bg-green-100 text-green-800 border-green-200' },
   canceled: { label: 'Đã hủy', className: 'bg-red-100 text-red-800 border-red-200' },
 };
@@ -29,14 +36,14 @@ const paymentLabels: Record<PaymentStatus, { label: string; className: string }>
 
 const flowerEvalLabels: Record<FlowerEvaluationStatus, { label: string; className: string }> = {
   pending: { label: 'Chờ đánh giá', className: 'bg-gray-100 text-gray-800 border-gray-200' },
-  approved: { label: 'Đạt yêu cầu', className: 'bg-green-100 text-green-800 border-green-200' },
-  rejected: { label: 'Không đạt', className: 'bg-red-100 text-red-800 border-red-200' },
+  pass: { label: 'Đạt yêu cầu', className: 'bg-green-100 text-green-800 border-green-200' },
+  fail: { label: 'Không đạt', className: 'bg-red-100 text-red-800 border-red-200' },
 };
 
 const demoResponseLabels: Record<DemoResponseStatus, { label: string; className: string }> = {
   pending: { label: 'Chờ phản hồi', className: 'bg-amber-100 text-amber-800 border-amber-200' },
-  approved: { label: 'Đã duyệt', className: 'bg-green-100 text-green-800 border-green-200' },
-  revision_requested: { label: 'Yêu cầu chỉnh sửa', className: 'bg-orange-100 text-orange-800 border-orange-200' },
+  approve: { label: 'Đã duyệt', className: 'bg-green-100 text-green-800 border-green-200' },
+  request_revision: { label: 'Yêu cầu chỉnh sửa', className: 'bg-orange-100 text-orange-800 border-orange-200' },
 };
 
 const deliveryLabels: Record<DeliveryStatus, { label: string; className: string }> = {
