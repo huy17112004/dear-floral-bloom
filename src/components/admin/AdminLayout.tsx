@@ -1,8 +1,17 @@
-import { Link, useLocation, Outlet, useNavigate } from 'react-router-dom';
+import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 import {
-  LayoutDashboard, Users, Package, ShoppingCart, Palette, FileText,
-  Warehouse, BarChart3, Flower2, Menu, ChevronLeft, LogOut
+  ChevronLeft,
+  FileText,
+  Flower2,
+  LayoutDashboard,
+  LogOut,
+  Menu,
+  Package,
+  Palette,
+  ShoppingCart,
+  Users,
+  Warehouse,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -15,7 +24,6 @@ const sidebarLinks = [
   { label: 'Đơn hàng custom', path: '/admin/orders/custom', icon: Palette },
   { label: 'Phiếu nhập hàng', path: '/admin/purchase-receipts', icon: FileText },
   { label: 'Tồn kho', path: '/admin/inventory', icon: Warehouse },
-  { label: 'Báo cáo', path: '/admin/reports', icon: BarChart3 },
 ];
 
 export function AdminLayout() {
@@ -91,7 +99,7 @@ export function AdminLayout() {
       <div className={cn('flex-1 transition-all duration-300', collapsed ? 'ml-16' : 'ml-64')}>
         <header className="sticky top-0 z-30 flex h-16 items-center border-b bg-background/95 px-6 backdrop-blur">
           <h2 className="font-heading text-lg font-semibold text-heading">
-            {sidebarLinks.find(l => location.pathname.startsWith(l.path))?.label || 'Admin'}
+            {sidebarLinks.find(item => location.pathname.startsWith(item.path))?.label || 'Admin'}
           </h2>
         </header>
 

@@ -128,6 +128,7 @@ export default function AdminProductList() {
     if (value === 'frame_option') {
       setProductForm(prev => ({
         ...prev,
+        categoryId: '',
         productKind: value,
         isSellableDirectly: false,
         isCustomSelectable: true,
@@ -215,15 +216,17 @@ export default function AdminProductList() {
   };
 
   const handleCreateProduct = async () => {
-    if (!productForm.categoryId) {
+    if (productForm.productKind === 'standard_product' && !productForm.categoryId) {
       toast.error('Vui lòng chọn loại sản phẩm');
       return;
     }
 
-    const selectedCategory = categories.find(category => category.id === productForm.categoryId);
-    if (!selectedCategory || selectedCategory.status !== 'active') {
-      toast.error('Không thể chọn loại sản phẩm đang ẩn');
-      return;
+    if (productForm.productKind === 'standard_product') {
+      const selectedCategory = categories.find(category => category.id === productForm.categoryId);
+      if (!selectedCategory || selectedCategory.status !== 'active') {
+        toast.error('Không thể chọn loại sản phẩm đang ẩn');
+        return;
+      }
     }
 
     if (productForm.imageFiles.length === 0) {
@@ -237,7 +240,7 @@ export default function AdminProductList() {
         name: productForm.name,
         description: productForm.description,
         price: Number(productForm.price),
-        categoryId: Number(productForm.categoryId),
+        categoryId: productForm.productKind === 'standard_product' ? Number(productForm.categoryId) : undefined,
         productKind: productForm.productKind,
         isSellableDirectly: productForm.isSellableDirectly,
         isCustomSelectable: productForm.isCustomSelectable,
@@ -265,7 +268,7 @@ export default function AdminProductList() {
       name: product.name,
       description: product.description ?? '',
       price: String(product.price),
-      categoryId: String(product.categoryId),
+      categoryId: product.categoryId ? String(product.categoryId) : '',
       productKind: product.productKind,
       isSellableDirectly: product.isSellableDirectly,
       isCustomSelectable: product.isCustomSelectable,
@@ -283,16 +286,18 @@ export default function AdminProductList() {
       return;
     }
 
-    if (!productForm.categoryId) {
+    if (productForm.productKind === 'standard_product' && !productForm.categoryId) {
       toast.error('Vui lòng chọn loại sản phẩm');
       return;
     }
 
-    const selectedCategory = categories.find(category => category.id === productForm.categoryId);
-    const isKeepingCurrentCategory = editingProduct.categoryId === productForm.categoryId;
-    if (!selectedCategory || (selectedCategory.status !== 'active' && !isKeepingCurrentCategory)) {
-      toast.error('Không thể chọn loại sản phẩm đang ẩn');
-      return;
+    if (productForm.productKind === 'standard_product') {
+      const selectedCategory = categories.find(category => category.id === productForm.categoryId);
+      const isKeepingCurrentCategory = editingProduct.categoryId === productForm.categoryId;
+      if (!selectedCategory || (selectedCategory.status !== 'active' && !isKeepingCurrentCategory)) {
+        toast.error('Không thể chọn loại sản phẩm đang ẩn');
+        return;
+      }
     }
 
     setSubmittingProduct(true);
@@ -301,7 +306,7 @@ export default function AdminProductList() {
         name: productForm.name,
         description: productForm.description,
         price: Number(productForm.price),
-        categoryId: Number(productForm.categoryId),
+        categoryId: productForm.productKind === 'standard_product' ? Number(productForm.categoryId) : undefined,
         productKind: productForm.productKind,
         isSellableDirectly: productForm.isSellableDirectly,
         isCustomSelectable: productForm.isCustomSelectable,
@@ -616,21 +621,6 @@ function ProductForm({
       <div><Label>Mô tả</Label><Input value={productForm.description} onChange={e => setProductForm(prev => ({ ...prev, description: e.target.value }))} /></div>
       <div><Label>Giá</Label><Input type="number" min="1" value={productForm.price} onChange={e => setProductForm(prev => ({ ...prev, price: e.target.value }))} /></div>
       <div>
-        <Label>Loại sản phẩm</Label>
-        <Select value={productForm.categoryId} onValueChange={v => setProductForm(prev => ({ ...prev, categoryId: v }))}>
-          <SelectTrigger><SelectValue placeholder="Chọn loại sản phẩm" /></SelectTrigger>
-          <SelectContent>
-            {categories
-              .filter(category => category.status === 'active' || category.id === productForm.categoryId)
-              .map(category => (
-              <SelectItem key={category.id} value={category.id}>
-                {category.name}{category.status !== 'active' ? ' (ẩn)' : ''}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-      <div>
         <Label>Loại mặt hàng</Label>
         <Select value={productForm.productKind} onValueChange={v => handleProductKindChange(v as ProductKind)}>
           <SelectTrigger><SelectValue /></SelectTrigger>
@@ -640,6 +630,23 @@ function ProductForm({
           </SelectContent>
         </Select>
       </div>
+      {productForm.productKind === 'standard_product' && (
+        <div>
+          <Label>Loại sản phẩm</Label>
+          <Select value={productForm.categoryId} onValueChange={v => setProductForm(prev => ({ ...prev, categoryId: v }))}>
+            <SelectTrigger><SelectValue placeholder="Chọn loại sản phẩm" /></SelectTrigger>
+            <SelectContent>
+              {categories
+                .filter(category => category.status === 'active' || category.id === productForm.categoryId)
+                .map(category => (
+                <SelectItem key={category.id} value={category.id}>
+                  {category.name}{category.status !== 'active' ? ' (ẩn)' : ''}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      )}
       <div className="grid grid-cols-2 gap-3">
         <div>
           <Label>Bán trực tiếp</Label>

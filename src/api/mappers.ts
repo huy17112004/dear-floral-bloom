@@ -25,8 +25,9 @@ export function mapProduct(response: ProductResponse): Product {
 
   return {
     id: String(response.productId),
-    categoryId: String(response.categoryId),
+    categoryId: response.categoryId != null ? String(response.categoryId) : '',
     category: response.categoryName
+      && response.categoryId != null
       ? {
           id: String(response.categoryId),
           name: response.categoryName,
@@ -123,7 +124,7 @@ export function mapCustomOrder(response: CustomOrderResponse): CustomOrder {
     flowerType: response.flowerType,
     personalizationContent: response.personalizationContent ?? '',
     requestedDeliveryDate: response.requestedDeliveryDate,
-    flowerInputImageUrl: response.flowerInputImageUrl,
+    flowerInputImageUrl: response.flowerInputImageUrl ? resolveImageUrl(response.flowerInputImageUrl) : undefined,
     flowerEvaluationStatus: toLowerSnake(response.flowerEvaluationStatus) as CustomOrder['flowerEvaluationStatus'],
     flowerEvaluationNote: response.flowerEvaluationNote ?? undefined,
     rejectionReason: response.rejectionReason ?? undefined,
@@ -151,6 +152,21 @@ export function mapAvailableOrder(response: AvailableOrderResponse): AvailableOr
     orderCode: response.orderCode,
     customerUserId: '',
     shippingAddressId: '',
+    shippingAddress: response.shippingReceiverName
+      ? {
+          id: '',
+          customerUserId: '',
+          receiverName: response.shippingReceiverName,
+          receiverPhone: response.shippingReceiverPhone ?? '',
+          addressLine: response.shippingAddressLine ?? '',
+          ward: response.shippingWard ?? '',
+          district: response.shippingDistrict ?? '',
+          province: response.shippingProvince ?? '',
+          isDefault: false,
+          createdAt: '',
+          updatedAt: '',
+        }
+      : undefined,
     orderStatus: toLowerSnake(response.orderStatus) as AvailableOrder['orderStatus'],
     paymentStatus,
     totalAmount: Number(response.totalAmount ?? 0),
@@ -178,5 +194,6 @@ export function mapAvailableOrder(response: AvailableOrderResponse): AvailableOr
       },
     })),
     orderedAt: response.orderedAt ?? '',
+    rejectionReason: response.rejectionReason,
   };
 }

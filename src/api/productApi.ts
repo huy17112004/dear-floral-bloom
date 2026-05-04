@@ -3,7 +3,7 @@ import type { ProductKind } from '@/types';
 
 export interface ProductResponse {
   productId: number;
-  categoryId: number;
+  categoryId?: number | null;
   categoryName?: string;
   name: string;
   slug?: string;
@@ -37,7 +37,7 @@ export interface ProductUpsertRequest {
   name: string;
   description: string;
   price: number;
-  categoryId: number;
+  categoryId?: number;
   productKind: ProductKind;
   isSellableDirectly: boolean;
   isCustomSelectable: boolean;
@@ -55,7 +55,9 @@ function toProductFormData(payload: ProductUpsertRequest): FormData {
   formData.append('name', payload.name);
   formData.append('description', payload.description);
   formData.append('price', String(payload.price));
-  formData.append('categoryId', String(payload.categoryId));
+  if (payload.categoryId !== undefined && payload.categoryId !== null) {
+    formData.append('categoryId', String(payload.categoryId));
+  }
   formData.append('productKind', payload.productKind.toUpperCase());
   formData.append('isSellableDirectly', String(payload.isSellableDirectly));
   formData.append('isCustomSelectable', String(payload.isCustomSelectable));

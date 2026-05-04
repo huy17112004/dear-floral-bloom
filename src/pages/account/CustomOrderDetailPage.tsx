@@ -67,6 +67,10 @@ export default function CustomOrderDetailPage() {
     if (demos.length === 0) return '';
     return [...demos].sort((a, b) => b.versionNo - a.versionNo)[0]?.id ?? '';
   }, [demos]);
+  const extraRevisionFee = useMemo(
+    () => Math.max(0, Number((order?.totalAmount ?? 0) - (order?.depositAmount ?? 0) * 2)),
+    [order]
+  );
 
   const submitFeedback = async (demoId: string, action: 'approve' | 'request_revision') => {
     if (!id) return;
@@ -202,6 +206,16 @@ export default function CustomOrderDetailPage() {
             <div className="flex justify-between"><span className="text-caption">Yêu cầu</span><span className="text-heading text-right max-w-[60%]">{order.personalizationContent}</span></div>
             {order.requestedDeliveryDate && <div className="flex justify-between"><span className="text-caption">Ngày mong muốn</span><span className="text-heading">{new Date(order.requestedDeliveryDate).toLocaleDateString('vi-VN')}</span></div>}
             <div className="flex justify-between"><span className="text-caption">Đánh giá hoa</span><StatusBadge type="flowerEval" status={order.flowerEvaluationStatus} /></div>
+            {order.flowerInputImageUrl && (
+              <div className="pt-2">
+                <p className="mb-2 text-caption">Ảnh hoa khách gửi</p>
+                <img
+                  src={resolveImageUrl(order.flowerInputImageUrl)}
+                  alt="Ảnh hoa khách gửi"
+                  className="max-h-72 w-full rounded-lg border object-cover"
+                />
+              </div>
+            )}
           </CardContent>
         </Card>
 
@@ -210,6 +224,9 @@ export default function CustomOrderDetailPage() {
           <CardContent className="space-y-2 text-sm">
             <div className="flex justify-between"><span className="text-caption">Đặt cọc</span><span className="text-heading font-medium">{order.depositAmount.toLocaleString('vi-VN')}₫</span></div>
             <div className="flex justify-between"><span className="text-caption">Còn lại</span><span className="text-heading font-medium">{order.remainingAmount.toLocaleString('vi-VN')}₫</span></div>
+            {extraRevisionFee > 0 && (
+              <div className="flex justify-between"><span className="text-caption">Phí chỉnh sửa demo vượt mức</span><span className="text-heading font-medium">+{extraRevisionFee.toLocaleString('vi-VN')}₫</span></div>
+            )}
             <div className="flex justify-between border-t pt-2"><span className="font-medium text-heading">Tổng cộng</span><span className="font-bold text-heading">{order.totalAmount.toLocaleString('vi-VN')}₫</span></div>
             <div className="flex justify-between"><span className="text-caption">Trạng thái</span><StatusBadge type="payment" status={order.paymentStatus} /></div>
           </CardContent>

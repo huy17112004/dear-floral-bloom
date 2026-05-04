@@ -12,11 +12,18 @@ export interface AvailableOrderItemResponse {
 export interface AvailableOrderResponse {
   orderId: number;
   orderCode: string;
+  shippingReceiverName?: string;
+  shippingReceiverPhone?: string;
+  shippingAddressLine?: string;
+  shippingWard?: string;
+  shippingDistrict?: string;
+  shippingProvince?: string;
   orderStatus: string;
   paymentStatus: string;
   totalAmount: number;
   orderedAt: string;
   items: AvailableOrderItemResponse[];
+  rejectionReason?: string;
 }
 
 export interface CreateAvailableOrderItemRequest {

@@ -24,8 +24,7 @@ import RegisterPage from "@/pages/auth/RegisterPage";
 // Account pages
 import ProfilePage from "@/pages/account/ProfilePage";
 import AddressManagementPage from "@/pages/account/AddressManagementPage";
-import MyAvailableOrdersPage from "@/pages/account/MyAvailableOrdersPage";
-import MyCustomOrdersPage from "@/pages/account/MyCustomOrdersPage";
+import MyOrdersPage from "@/pages/account/MyOrdersPage";
 import AvailableOrderDetailPage from "@/pages/account/AvailableOrderDetailPage";
 import CreateAvailableOrderPage from "@/pages/account/CreateAvailableOrderPage";
 import CustomOrderDetailPage from "@/pages/account/CustomOrderDetailPage";
@@ -39,7 +38,6 @@ import AdminAvailableOrders from "@/pages/admin/AdminAvailableOrders";
 import AdminCustomOrders from "@/pages/admin/AdminCustomOrders";
 import AdminPurchaseReceipts from "@/pages/admin/AdminPurchaseReceipts";
 import AdminInventory from "@/pages/admin/AdminInventory";
-import AdminReports from "@/pages/admin/AdminReports";
 
 // Staff pages
 import StaffDashboard from "@/pages/staff/StaffDashboard";
@@ -68,10 +66,9 @@ const App = () => (
             <Route path="/auth/register" element={<RegisterPage />} />
             <Route path="/account/profile" element={<ProfilePage />} />
             <Route path="/account/addresses" element={<AddressManagementPage />} />
-            <Route path="/account/orders" element={<MyAvailableOrdersPage />} />
+            <Route path="/account/orders" element={<MyOrdersPage />} />
             <Route path="/account/orders/create" element={<CreateAvailableOrderPage />} />
             <Route path="/account/orders/:id" element={<AvailableOrderDetailPage />} />
-            <Route path="/account/custom-orders" element={<MyCustomOrdersPage />} />
             <Route path="/account/custom-orders/create" element={<CreateCustomOrderPage />} />
             <Route path="/account/custom-orders/:id" element={<CustomOrderDetailPage />} />
           </Route>
@@ -95,14 +92,6 @@ const App = () => (
               element={(
                 <RequireRole allowed={["admin"]}>
                   <AdminUserList />
-                </RequireRole>
-              )}
-            />
-            <Route
-              path="/admin/reports"
-              element={(
-                <RequireRole allowed={["admin"]}>
-                  <AdminReports />
                 </RequireRole>
               )}
             />

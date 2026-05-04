@@ -176,15 +176,36 @@ export default function AdminCustomOrders() {
                             <div className="flex justify-between"><span className="text-caption">Khung tranh</span><span className="font-medium">{o.selectedFrame?.name || '—'}</span></div>
                             <div className="flex justify-between"><span className="text-caption">Yêu cầu</span><span className="font-medium text-right max-w-[50%]">{o.personalizationContent || '—'}</span></div>
                             {o.requestedDeliveryDate && <div className="flex justify-between"><span className="text-caption">Ngày mong muốn</span><span className="font-medium">{new Date(o.requestedDeliveryDate).toLocaleDateString('vi-VN')}</span></div>}
+                            {o.flowerInputImageUrl && (
+                              <div className="pt-1">
+                                <p className="text-caption mb-1">Ảnh hoa khách gửi</p>
+                                <img
+                                  src={resolveImageUrl(o.flowerInputImageUrl)}
+                                  alt="Ảnh hoa khách gửi"
+                                  className="max-h-56 w-full rounded-lg border object-cover"
+                                />
+                              </div>
+                            )}
                             <div className="pt-2 border-t space-y-2">
                               <div className="flex justify-between"><span className="text-caption">Đặt cọc</span><span className="font-medium">{o.depositAmount.toLocaleString('vi-VN')}₫</span></div>
                               <div className="flex justify-between"><span className="text-caption">Còn lại</span><span className="font-medium">{o.remainingAmount.toLocaleString('vi-VN')}₫</span></div>
+                              {Math.max(0, o.totalAmount - o.depositAmount * 2) > 0 && (
+                                <div className="flex justify-between"><span className="text-caption">Phí chỉnh sửa demo vượt mức</span><span className="font-medium">+{Math.max(0, o.totalAmount - o.depositAmount * 2).toLocaleString('vi-VN')}₫</span></div>
+                              )}
                               <div className="flex justify-between font-semibold"><span>Tổng cộng</span><span>{o.totalAmount.toLocaleString('vi-VN')}₫</span></div>
                             </div>
                             <div className="pt-2 border-t space-y-2">
                               <div className="flex justify-between"><span className="text-caption">Trạng thái thanh toán</span><StatusBadge type="payment" status={o.paymentStatus} /></div>
                               <div className="flex justify-between"><span className="text-caption">Trạng thái đơn</span><StatusBadge type="customOrder" status={o.orderStatus} /></div>
                             </div>
+                            {(o.refundBankName || o.refundAccountNumber || o.refundAccountName || o.orderStatus === 'waiting_refund' || o.orderStatus === 'refunded') && (
+                              <div className="pt-2 border-t space-y-1">
+                                <p className="text-caption font-medium">Thông tin hoàn tiền</p>
+                                <p className="text-xs text-body"><span className="font-medium">Ngân hàng:</span> {o.refundBankName || '—'}</p>
+                                <p className="text-xs text-body"><span className="font-medium">Số tài khoản:</span> {o.refundAccountNumber || '—'}</p>
+                                <p className="text-xs text-body"><span className="font-medium">Chủ tài khoản:</span> {o.refundAccountName || '—'}</p>
+                              </div>
+                            )}
                             {o.shippingAddress && (
                               <div className="pt-2 border-t">
                                 <p className="text-caption font-medium mb-1">Địa chỉ giao hàng</p>

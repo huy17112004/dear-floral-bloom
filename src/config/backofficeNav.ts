@@ -1,6 +1,5 @@
 import type { LucideIcon } from "lucide-react";
 import {
-  BarChart3,
   ClipboardList,
   FileText,
   LayoutDashboard,
@@ -36,6 +35,5 @@ export const backofficeNavItems: BackofficeNavItem[] = [
   { label: "Phiếu nhập hàng", path: "/staff/purchase-receipts", icon: FileText, roles: ["staff"] },
   { label: "Tồn kho", path: "/admin/inventory", icon: Warehouse, roles: ["admin"] },
   { label: "Tồn kho", path: "/staff/inventory", icon: Warehouse, roles: ["staff"] },
-  { label: "Báo cáo", path: "/admin/reports", icon: BarChart3, roles: ["admin"] },
   { label: "Giao nhận", path: "/staff/delivery", icon: Truck, roles: ["staff"] },
 ];

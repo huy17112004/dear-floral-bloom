@@ -86,6 +86,13 @@ export default function AvailableOrderDetailPage() {
             <CardContent><p className="text-sm text-body">{order.note}</p></CardContent>
           </Card>
         )}
+
+        {order.rejectionReason && (
+          <Card className="border-red-200 bg-red-50">
+            <CardHeader><CardTitle className="font-heading text-base text-red-700">Lý do từ chối</CardTitle></CardHeader>
+            <CardContent><p className="text-sm text-red-900">{order.rejectionReason}</p></CardContent>
+          </Card>
+        )}
       </div>
     </div>
   );

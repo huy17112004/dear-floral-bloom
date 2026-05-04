@@ -62,6 +62,10 @@ export interface CreateCustomOrderRequest {
   depositPaymentProof?: string;
 }
 
+export interface UploadCustomFlowerImageResponse {
+  flowerInputImageUrl: string;
+}
+
 export interface CreateCustomOrderResponse {
   orderId: number;
   orderCode: string;
@@ -100,6 +104,15 @@ export function createCustomOrder(payload: CreateCustomOrderRequest) {
   return apiRequest<CreateCustomOrderResponse>('/api/orders/custom', {
     method: 'POST',
     body: payload,
+  });
+}
+
+export function uploadCustomFlowerImage(file: File) {
+  const formData = new FormData();
+  formData.append('file', file);
+  return apiRequest<UploadCustomFlowerImageResponse>('/api/orders/custom/flower-image', {
+    method: 'POST',
+    body: formData,
   });
 }
 

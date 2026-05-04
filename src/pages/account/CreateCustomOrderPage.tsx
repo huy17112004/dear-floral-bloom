@@ -5,12 +5,12 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { AddressCard } from '@/components/shared/AddressCard';
+import { AddressCrudSection } from '@/components/shared/AddressCrudSection';
 import { ArrowLeft, Check, BanknoteIcon, QrCode, Clock } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { customOrderApi, meApi, productApi } from '@/api';
-import { mapAddress, mapProduct } from '@/api/mappers';
-import type { CustomerAddress, Product } from '@/types';
+import { customOrderApi, productApi } from '@/api';
+import { mapProduct } from '@/api/mappers';
+import type { Product } from '@/types';
 import { toast } from 'sonner';
 
 // ─── Bank info (hardcoded – update manually later) ────────────────────────────
@@ -142,13 +142,13 @@ function DepositPaymentScreen({
 // ─── Create Form ──────────────────────────────────────────────────────────────
 export default function CreateCustomOrderPage() {
   const [frames, setFrames] = useState<Product[]>([]);
-  const [addresses, setAddresses] = useState<CustomerAddress[]>([]);
   const [selectedFrame, setSelectedFrame] = useState<string | null>(null);
   const [selectedAddress, setSelectedAddress] = useState<string>('');
   const [flowerType, setFlowerType] = useState('');
   const [personalizationContent, setPersonalizationContent] = useState('');
   const [requestedDeliveryDate, setRequestedDeliveryDate] = useState('');
-  const [flowerInputImage, setFlowerInputImage] = useState('');
+  const [flowerInputImageFile, setFlowerInputImageFile] = useState<File | null>(null);
+  const [flowerInputPreview, setFlowerInputPreview] = useState('');
 
   // After successful creation
   const [createdOrder, setCreatedOrder] = useState<{
@@ -160,15 +160,9 @@ export default function CreateCustomOrderPage() {
   useEffect(() => {
     const load = async () => {
       try {
-        const [framesResponse, addressesResponse] = await Promise.all([
-          productApi.getCustomSelectableProducts({ page: 0, limit: 100 }),
-          meApi.getMyAddresses(),
-        ]);
+        const framesResponse = await productApi.getCustomSelectableProducts({ page: 0, limit: 100 });
 
         setFrames(framesResponse.data.map(mapProduct));
-        const mappedAddresses = addressesResponse.data.map(mapAddress);
-        setAddresses(mappedAddresses);
-        setSelectedAddress(mappedAddresses[0]?.id ?? '');
       } catch (error) {
         const message = error instanceof Error ? error.message : 'Không thể tải dữ liệu tạo đơn custom';
         toast.error(message);
@@ -186,14 +180,20 @@ export default function CreateCustomOrderPage() {
       return;
     }
 
+    if (!flowerInputImageFile) {
+      toast.error('Vui lòng tải lên ảnh hoa thực tế');
+      return;
+    }
+
     try {
+      const uploadResponse = await customOrderApi.uploadCustomFlowerImage(flowerInputImageFile);
       const response = await customOrderApi.createCustomOrder({
         selectedFrameProductId: Number(selectedFrame),
         shippingAddressId: Number(selectedAddress),
         flowerType,
         personalizationContent,
         requestedDeliveryDate: requestedDeliveryDate || undefined,
-        flowerInputImage: flowerInputImage || undefined,
+        flowerInputImage: uploadResponse.data.flowerInputImageUrl,
         depositPaymentMethod: 'bank_transfer',
       });
 
@@ -293,12 +293,19 @@ export default function CreateCustomOrderPage() {
             <div>
               <Label>Ảnh hoa thực tế</Label>
               <Input
+                type="file"
+                accept="image/*"
                 className="mt-1"
-                placeholder="URL ảnh hoa đầu vào"
-                value={flowerInputImage}
-                onChange={e => setFlowerInputImage(e.target.value)}
+                onChange={e => {
+                  const file = e.target.files?.[0] ?? null;
+                  setFlowerInputImageFile(file);
+                  setFlowerInputPreview(file ? URL.createObjectURL(file) : '');
+                }}
               />
-              <p className="mt-1 text-xs text-caption">Nhập URL ảnh hoa bạn cung cấp.</p>
+              {flowerInputPreview && (
+                <img src={flowerInputPreview} alt="Ảnh hoa thực tế" className="mt-2 max-h-56 w-full rounded-lg border object-cover" />
+              )}
+              <p className="mt-1 text-xs text-caption">Tải lên ảnh hoa bạn cung cấp.</p>
             </div>
           </CardContent>
         </Card>
@@ -308,16 +315,13 @@ export default function CreateCustomOrderPage() {
           <CardHeader>
             <CardTitle className="font-heading text-base">3. Địa chỉ giao hàng</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-3">
-            {addresses.map(addr => (
-              <AddressCard
-                key={addr.id}
-                address={addr}
-                selectable
-                selected={selectedAddress === addr.id}
-                onSelect={() => setSelectedAddress(addr.id)}
-              />
-            ))}
+          <CardContent>
+            <AddressCrudSection
+              selectable
+              selectedAddressId={selectedAddress}
+              onSelectAddress={setSelectedAddress}
+              title="Chọn địa chỉ giao hàng"
+            />
           </CardContent>
         </Card>
 

@@ -134,6 +134,7 @@ export interface AvailableOrder {
   completedAt?: string;
   canceledAt?: string;
   note?: string;
+  rejectionReason?: string;
 }
 
 export interface AvailableOrderItem {
