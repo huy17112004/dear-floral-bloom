@@ -51,8 +51,7 @@ export default function HomePage() {
             <span className="text-accent">vĩnh cửu</span> của thiên nhiên
           </h1>
           <p className="mt-6 max-w-xl text-lg text-secondary/90 leading-relaxed drop-shadow-sm">
-            Mỗi tác phẩm của Dear Floral là một câu chuyện được kể bằng hoa — ép khô, sắp đặt và lưu giữ
-            trong khung tranh thủ công tinh tế.
+            Mỗi tác phẩm của Dear Floral là một câu chuyện được kể bằng hoa - ép khô, thiết kế và lưu giữ trong khung tranh thủ công tinh tế.
           </p>
           <div className="mt-8 flex flex-wrap gap-4">
             <Link to="/products">
@@ -73,9 +72,9 @@ export default function HomePage() {
       <section className="container py-16">
         <div className="grid gap-8 md:grid-cols-3">
           {[
-            { icon: Flower2, title: 'Thủ công 100%', desc: 'Mỗi sản phẩm được làm hoàn toàn bằng tay bởi nghệ nhân' },
-            { icon: Heart, title: 'Hoa thật tự nhiên', desc: 'Sử dụng hoa ép khô tự nhiên, giữ nguyên màu sắc và hình dáng' },
-            { icon: Sparkles, title: 'Cá nhân hóa', desc: 'Dịch vụ custom theo yêu cầu với hoa của riêng bạn' },
+            { icon: Flower2, title: 'Thủ công 100%', desc: 'Mỗi sản phẩm được làm hoàn toàn thủ công bằng tay' },
+            { icon: Heart, title: 'Hoa thật tự nhiên', desc: 'Hoa thật ép khô, mang sắc độ riêng và được xử lý tinh tế để giữ lại vẻ đẹp nguyên bản' },
+            { icon: Sparkles, title: 'Cá nhân hóa', desc: 'Lưu giữ bó hoa kỷ niệm của bạn, tạo nên những khung hoa đặc biệt nhất' },
           ].map(feature => (
             <div key={feature.title} className="rounded-2xl bg-card p-8 text-center border border-border/50">
               <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-sage-light">

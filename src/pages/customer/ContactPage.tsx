@@ -19,21 +19,21 @@ export default function ContactPage() {
               <div className="rounded-lg bg-primary/10 p-3"><Mail className="h-5 w-5 text-primary" /></div>
               <div>
                 <h3 className="font-heading font-semibold text-heading">Email</h3>
-                <p className="text-sm text-body">hello@dearfloral.vn</p>
+                <p className="text-sm text-body">dearfloral2022@gmail.com</p>
               </div>
             </div>
             <div className="flex items-start gap-4">
               <div className="rounded-lg bg-primary/10 p-3"><Phone className="h-5 w-5 text-primary" /></div>
               <div>
                 <h3 className="font-heading font-semibold text-heading">Điện thoại</h3>
-                <p className="text-sm text-body">0901 234 567</p>
+                <p className="text-sm text-body">058 228 2789</p>
               </div>
             </div>
             <div className="flex items-start gap-4">
               <div className="rounded-lg bg-primary/10 p-3"><MapPin className="h-5 w-5 text-primary" /></div>
               <div>
                 <h3 className="font-heading font-semibold text-heading">Địa chỉ</h3>
-                <p className="text-sm text-body">TP. Hồ Chí Minh, Việt Nam</p>
+                <p className="text-sm text-body">TP. Hà Nội, Việt Nam <br /> TP. Hồ Chí Minh, Việt Nam</p>
               </div>
             </div>
           </div>

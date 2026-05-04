@@ -37,9 +37,9 @@ export function CustomerFooter() {
           <div>
             <h4 className="mb-3 font-heading text-sm font-semibold text-heading">Liên hệ</h4>
             <ul className="space-y-2 text-sm text-body">
-              <li>📧 hello@dearfloral.vn</li>
-              <li>📱 0901 234 567</li>
-              <li>📍 TP. Hồ Chí Minh, Việt Nam</li>
+              <li>📧 dearfloral2022@gmail.com</li>
+              <li>📱 058 228 2789</li>
+              <li>📍 TP. Hà Nội, Việt Nam <br/> TP. Hồ Chí Minh, Việt Nam</li>
             </ul>
           </div>
         </div>

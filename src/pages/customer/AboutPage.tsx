@@ -27,12 +27,12 @@ export default function AboutPage() {
             <div className="rounded-2xl bg-surface-warm p-6 text-center">
               <Heart className="mx-auto mb-3 h-8 w-8 text-accent" />
               <h3 className="font-heading text-lg font-semibold text-heading">Sứ mệnh</h3>
-              <p className="mt-2 text-sm">Mang nghệ thuật hoa ép khô đến gần hơn với mọi người, biến mỗi khoảnh khắc thành tác phẩm nghệ thuật.</p>
+              <p className="mt-2 text-sm">Dear Floral mang sứ mệnh lưu giữ những khoảnh khắc ý nghĩa thành các tác phẩm hoa ép khô mang giá trị tinh thần bền lâu.</p>
             </div>
             <div className="rounded-2xl bg-surface-warm p-6 text-center">
               <Flower2 className="mx-auto mb-3 h-8 w-8 text-primary" />
               <h3 className="font-heading text-lg font-semibold text-heading">Giá trị</h3>
-              <p className="mt-2 text-sm">Thủ công, chất lượng, bền vững và đầy cảm xúc trong từng sản phẩm.</p>
+              <p className="mt-2 text-sm">Dear Floral tạo ra giá trị tinh thần bền vững qua các sản phẩm thủ công mang dấu ấn cá nhân.</p>
             </div>
           </div>
         </div>
