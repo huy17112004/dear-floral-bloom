@@ -21,7 +21,7 @@ export interface EvaluateFlowerInputRequest {
 }
 
 export interface UpdateCustomDeliveryRequest {
-  deliveryType: 'pickup_input' | 'ship_output';
+  deliveryType: 'PICKUP_INPUT' | 'SHIP_OUTPUT';
   deliveryStatus: string;
   deliveryNote?: string;
   deliveryTime?: string;

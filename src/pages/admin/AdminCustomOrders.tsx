@@ -110,7 +110,7 @@ export default function AdminCustomOrders() {
 
   const handleConfirmDelivered = async (orderId: string) => {
     await adminCustomOrderApi.updateAdminCustomOrderDelivery(Number(orderId), {
-      deliveryType: 'ship_output',
+      deliveryType: 'SHIP_OUTPUT',
       deliveryStatus: 'DELIVERED',
     });
     toast.success('Đã xác nhận giao hàng thành công');
