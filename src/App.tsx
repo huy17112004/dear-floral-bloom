@@ -39,6 +39,7 @@ import AdminAvailableOrders from "@/pages/admin/AdminAvailableOrders";
 import AdminCustomOrders from "@/pages/admin/AdminCustomOrders";
 import AdminPurchaseReceipts from "@/pages/admin/AdminPurchaseReceipts";
 import AdminInventory from "@/pages/admin/AdminInventory";
+import AdminReports from "@/pages/admin/AdminReports";
 
 // Staff pages
 import StaffDashboard from "@/pages/staff/StaffDashboard";
@@ -89,6 +90,7 @@ const App = () => (
             <Route path="/admin/orders/custom" element={<AdminCustomOrders />} />
             <Route path="/admin/purchase-receipts" element={<AdminPurchaseReceipts />} />
             <Route path="/admin/inventory" element={<AdminInventory />} />
+            <Route path="/admin/reports" element={<AdminReports />} />
             <Route
               path="/admin/users"
               element={(
