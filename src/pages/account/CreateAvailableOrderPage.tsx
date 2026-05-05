@@ -1,4 +1,4 @@
-﻿import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -11,15 +11,16 @@ import { ApiError } from '@/api/client';
 import { mapProduct } from '@/api/mappers';
 import type { Product } from '@/types';
 import { toast } from 'sonner';
+import { clearCart, getCartItems, type CartItem } from '@/lib/cart';
 
 export default function CreateAvailableOrderPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const [product, setProduct] = useState<Product | null>(null);
   const [selectedAddress, setSelectedAddress] = useState('');
   const [note, setNote] = useState('');
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [items, setItems] = useState<CartItem[]>([]);
 
   const productId = useMemo(() => Number(searchParams.get('product')), [searchParams]);
   const quantity = useMemo(() => {
@@ -29,15 +30,40 @@ export default function CreateAvailableOrderPage() {
 
   useEffect(() => {
     const load = async () => {
+      const currentCart = getCartItems();
+      if (currentCart.length > 0) {
+        setItems(currentCart);
+        setLoading(false);
+        return;
+      }
+
       if (!Number.isFinite(productId) || productId <= 0) {
-        toast.error('Sản phẩm không hợp lệ');
+        setItems([]);
         setLoading(false);
         return;
       }
 
       try {
         const productResponse = await productApi.getProductDetail(productId);
-        setProduct(mapProduct(productResponse.data));
+        const product = mapProduct(productResponse.data);
+        if (
+          product.productKind !== 'standard_product' ||
+          !product.isSellableDirectly ||
+          product.status !== 'active'
+        ) {
+          toast.error('Sản phẩm không khả dụng để đặt hàng.');
+          setItems([]);
+        } else {
+          setItems([
+            {
+              productId: product.id,
+              name: product.name,
+              imageUrl: product.imageUrl,
+              price: product.price,
+              quantity,
+            },
+          ]);
+        }
       } catch (error) {
         const message = error instanceof Error ? error.message : 'Không thể tải thông tin đặt hàng';
         toast.error(message);
@@ -47,53 +73,51 @@ export default function CreateAvailableOrderPage() {
     };
 
     void load();
-  }, [productId]);
+  }, [productId, quantity]);
+
+  const totalAmount = useMemo(
+    () => items.reduce((sum, item) => sum + item.price * item.quantity, 0),
+    [items]
+  );
 
   const handleSubmit = async () => {
-    if (submitting) {
-      return;
-    }
-    if (!product || !selectedAddress) {
+    if (submitting) return;
+    if (!selectedAddress) {
       toast.error('Vui lòng chọn địa chỉ giao hàng');
       return;
     }
+    if (items.length === 0) {
+      toast.error('Giỏ hàng trống, không thể tạo đơn.');
+      return;
+    }
+
     const shippingAddressId = Number(selectedAddress);
-    const productIdNumber = Number(product.id);
     if (!Number.isFinite(shippingAddressId) || shippingAddressId <= 0) {
       toast.error('Địa chỉ giao hàng không hợp lệ.');
       return;
     }
-    if (!Number.isFinite(productIdNumber) || productIdNumber <= 0) {
-      toast.error('Mã sản phẩm không hợp lệ.');
-      return;
-    }
-    if (!Number.isFinite(quantity) || quantity <= 0) {
-      toast.error('Số lượng không hợp lệ.');
-      return;
-    }
-    if (product.productKind !== 'standard_product') {
-      toast.error('Sản phẩm này không thể đặt theo đơn hàng thường.');
-      return;
-    }
-    if (!product.isSellableDirectly) {
-      toast.error('Sản phẩm này không bán trực tiếp.');
-      return;
-    }
-    if (product.status !== 'active') {
-      toast.error('Sản phẩm hiện không khả dụng để đặt hàng.');
+
+    const payloadItems = items
+      .map(item => ({
+        productId: Number(item.productId),
+        quantity: item.quantity,
+      }))
+      .filter(item => Number.isFinite(item.productId) && item.productId > 0 && item.quantity > 0);
+
+    if (payloadItems.length === 0) {
+      toast.error('Không có sản phẩm hợp lệ để đặt hàng.');
       return;
     }
 
     try {
       setSubmitting(true);
-      const payload = {
+      const response = await availableOrderApi.createAvailableOrder({
         shippingAddressId,
-        paymentMethod: 'cash',
+        paymentMethod: 'bank_transfer',
         note: note || undefined,
-        items: [{ productId: productIdNumber, quantity }],
-      };
-      console.debug('createAvailableOrder payload', payload);
-      const response = await availableOrderApi.createAvailableOrder(payload);
+        items: payloadItems,
+      });
+      clearCart();
       toast.success('Đặt hàng thành công');
       navigate(`/account/orders/${response.data.orderId}`);
     } catch (error) {
@@ -120,14 +144,14 @@ export default function CreateAvailableOrderPage() {
     return <div className="container py-16 text-center text-caption">Đang tải dữ liệu...</div>;
   }
 
-  if (!product) {
-    return <div className="container py-16 text-center text-caption">Không tìm thấy sản phẩm để đặt hàng.</div>;
+  if (items.length === 0) {
+    return <div className="container py-16 text-center text-caption">Không có sản phẩm để đặt hàng.</div>;
   }
 
   return (
     <div className="container max-w-3xl py-8">
-      <Link to={`/products/${product.id}`} className="mb-6 inline-flex items-center gap-1 text-sm text-caption hover:text-primary">
-        <ArrowLeft className="h-4 w-4" /> Quay lại sản phẩm
+      <Link to="/account/cart" className="mb-6 inline-flex items-center gap-1 text-sm text-caption hover:text-primary">
+        <ArrowLeft className="h-4 w-4" /> Quay lại giỏ hàng
       </Link>
 
       <h1 className="mb-6 font-heading text-2xl font-bold text-heading">Xác nhận đặt hàng</h1>
@@ -135,11 +159,17 @@ export default function CreateAvailableOrderPage() {
       <div className="space-y-6">
         <Card>
           <CardHeader><CardTitle className="font-heading text-base">Sản phẩm</CardTitle></CardHeader>
-          <CardContent className="space-y-2 text-sm">
-            <div className="flex justify-between"><span className="text-caption">Tên</span><span className="text-heading font-medium">{product.name}</span></div>
-            <div className="flex justify-between"><span className="text-caption">Số lượng</span><span className="text-heading font-medium">{quantity}</span></div>
-            <div className="flex justify-between"><span className="text-caption">Đơn giá</span><span className="text-heading font-medium">{product.price.toLocaleString('vi-VN')}₫</span></div>
-            <div className="flex justify-between"><span className="text-caption">Tổng cộng</span><span className="text-heading font-semibold">{(product.price * quantity).toLocaleString('vi-VN')}₫</span></div>
+          <CardContent className="space-y-3 text-sm">
+            {items.map(item => (
+              <div key={item.productId} className="flex justify-between">
+                <span className="text-heading font-medium">{item.name} x{item.quantity}</span>
+                <span className="text-heading">{(item.price * item.quantity).toLocaleString('vi-VN')}₫</span>
+              </div>
+            ))}
+            <div className="flex justify-between border-t pt-3">
+              <span className="text-caption">Tổng cộng</span>
+              <span className="text-heading font-semibold">{totalAmount.toLocaleString('vi-VN')}₫</span>
+            </div>
           </CardContent>
         </Card>
 
@@ -172,5 +202,3 @@ export default function CreateAvailableOrderPage() {
     </div>
   );
 }
-
-

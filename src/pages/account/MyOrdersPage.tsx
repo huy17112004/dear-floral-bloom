@@ -25,6 +25,7 @@ const CUSTOM_FILTERS: { key: CustomFilterKey; label: string }[] = [
 const IN_PROGRESS_STATUSES: CustomOrderStatus[] = [
   'deposited',
   'waiting_flower_review',
+  'waiting_flower_receipt',
   'in_progress',
   'waiting_demo_feedback',
   'waiting_remaining_payment',

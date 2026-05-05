@@ -19,6 +19,12 @@ const BANK_INFO = {
   accountHolder: 'NGUYEN VAN A',
 };
 
+const FLOWER_DELIVERY_GUIDE = {
+  recipient: 'Dear Floral',
+  phone: '0900 000 000',
+  address: '123 Nguyễn Trãi, Phường Bến Thành, Quận 1, TP.HCM',
+};
+
 export default function CustomOrderDetailPage() {
   const { id } = useParams();
   const [order, setOrder] = useState<CustomOrder | null>(null);
@@ -181,6 +187,38 @@ export default function CustomOrderDetailPage() {
                   <p>Đã nhận xác nhận của bạn. Cửa hàng đang kiểm tra giao dịch.</p>
                 </div>
               )}
+            </CardContent>
+          </Card>
+        )}
+
+        {order.orderStatus === 'waiting_flower_receipt' && (
+          <Card className="border-teal-300">
+            <CardHeader>
+              <CardTitle className="font-heading text-base text-teal-700">Hướng dẫn gửi hoa đến Dear Floral</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3 text-sm">
+              <p className="text-body">
+                Ảnh hoa đã được đánh giá đạt yêu cầu. Vui lòng gửi hoa thật đến cửa hàng để bắt đầu thực hiện đơn.
+              </p>
+              <div className="rounded-lg border bg-surface-warm p-3 space-y-2">
+                <div className="flex justify-between"><span className="text-caption">Người nhận</span><span className="font-medium">{FLOWER_DELIVERY_GUIDE.recipient}</span></div>
+                <div className="flex justify-between"><span className="text-caption">Số điện thoại</span><span className="font-medium">{FLOWER_DELIVERY_GUIDE.phone}</span></div>
+                <div>
+                  <p className="text-caption mb-1">Địa chỉ nhận hoa</p>
+                  <p className="font-medium">{FLOWER_DELIVERY_GUIDE.address}</p>
+                </div>
+              </div>
+              <div className="rounded-lg border border-amber-200 bg-amber-50 p-3">
+                <p className="font-medium text-amber-800 mb-1">Lưu ý đóng gói</p>
+                <ul className="list-disc pl-5 space-y-1 text-amber-900">
+                  <li>Bọc hoa bằng giấy mềm, tránh gãy cánh và dập nát.</li>
+                  <li>Đặt hoa trong hộp cứng, chèn vật liệu chống sốc.</li>
+                  <li>Ghi rõ mã đơn <strong>{order.orderCode}</strong> bên ngoài kiện hàng.</li>
+                </ul>
+              </div>
+              <p className="text-caption">
+                Sau khi cửa hàng xác nhận đã nhận hoa, trạng thái đơn sẽ chuyển sang <strong>Đang thực hiện</strong>.
+              </p>
             </CardContent>
           </Card>
         )}

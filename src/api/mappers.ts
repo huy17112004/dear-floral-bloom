@@ -72,6 +72,8 @@ export function mapCustomOrder(response: CustomOrderResponse): CustomOrder {
   const paymentStatusRaw = toLowerSnake(response.paymentStatus);
   const paymentStatus: CustomOrder['paymentStatus'] = paymentStatusRaw === 'paid'
     ? 'paid'
+    : paymentStatusRaw === 'pending'
+      ? 'pending'
     : paymentStatusRaw === 'partially_paid'
       ? 'partial'
       : paymentStatusRaw === 'refunded'
@@ -141,6 +143,8 @@ export function mapAvailableOrder(response: AvailableOrderResponse): AvailableOr
   const paymentStatusRaw = toLowerSnake(response.paymentStatus);
   const paymentStatus: AvailableOrder['paymentStatus'] = paymentStatusRaw === 'paid'
     ? 'paid'
+    : paymentStatusRaw === 'pending'
+      ? 'pending'
     : paymentStatusRaw === 'partially_paid'
       ? 'partial'
       : paymentStatusRaw === 'refunded'

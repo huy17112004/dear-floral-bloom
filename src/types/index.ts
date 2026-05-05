@@ -13,6 +13,7 @@ export type CustomOrderStatus =
   | 'pending_deposit_verification'
   | 'deposited'
   | 'waiting_flower_review'
+  | 'waiting_flower_receipt'
   | 'in_progress'
   | 'waiting_demo_feedback'
   | 'waiting_remaining_payment'
@@ -24,7 +25,7 @@ export type CustomOrderStatus =
   | 'completed'
   | 'canceled';
 
-export type PaymentStatus = 'unpaid' | 'paid' | 'partial' | 'refunded';
+export type PaymentStatus = 'unpaid' | 'pending' | 'paid' | 'partial' | 'refunded';
 
 export type PaymentMethod = 'bank_transfer' | 'cash' | 'momo' | 'zalo_pay';
 

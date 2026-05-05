@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+﻿import { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
@@ -22,7 +22,7 @@ export default function StaffCustomOrders() {
         const response = await adminCustomOrderApi.getAdminCustomOrders({ page: 0, limit: 100 });
         setOrders(response.data.map(mapCustomOrder));
       } catch (error) {
-        const message = error instanceof Error ? error.message : 'Không thể tải đơn custom';
+        const message = error instanceof Error ? error.message : 'KhÃ´ng thá»ƒ táº£i Ä‘Æ¡n custom';
         toast.error(message);
       }
     };
@@ -37,20 +37,20 @@ export default function StaffCustomOrders() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="font-heading text-2xl font-bold text-heading">Quản lý đơn hàng custom</h1>
+        <h1 className="font-heading text-2xl font-bold text-heading">Quáº£n lÃ½ Ä‘Æ¡n hÃ ng custom</h1>
         <Select value={statusFilter} onValueChange={setStatusFilter}>
           <SelectTrigger className="w-56">
-            <SelectValue placeholder="Lọc trạng thái" />
+            <SelectValue placeholder="Lá»c tráº¡ng thÃ¡i" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">Tất cả</SelectItem>
-            <SelectItem value="deposited">Đã đặt cọc</SelectItem>
-            <SelectItem value="waiting_flower_review">Chờ đánh giá hoa</SelectItem>
-            <SelectItem value="in_progress">Đang thực hiện</SelectItem>
-            <SelectItem value="waiting_demo_feedback">Chờ duyệt demo</SelectItem>
-            <SelectItem value="waiting_remaining_payment">Chờ thanh toán</SelectItem>
-            <SelectItem value="completed">Hoàn thành</SelectItem>
-            <SelectItem value="canceled">Đã hủy</SelectItem>
+            <SelectItem value="all">Táº¥t cáº£</SelectItem>
+            <SelectItem value="deposited">ÄÃ£ Ä‘áº·t cá»c</SelectItem>
+            <SelectItem value="waiting_flower_review">Chá» Ä‘Ã¡nh giÃ¡ hoa</SelectItem>`r`n            <SelectItem value="waiting_flower_receipt">Chờ nhận hoa từ khách</SelectItem>
+            <SelectItem value="in_progress">Äang thá»±c hiá»‡n</SelectItem>
+            <SelectItem value="waiting_demo_feedback">Chá» duyá»‡t demo</SelectItem>
+            <SelectItem value="waiting_remaining_payment">Chá» thanh toÃ¡n</SelectItem>
+            <SelectItem value="completed">HoÃ n thÃ nh</SelectItem>
+            <SelectItem value="canceled">ÄÃ£ há»§y</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -60,13 +60,13 @@ export default function StaffCustomOrders() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Mã đơn</TableHead>
-                <TableHead>Loại hoa</TableHead>
+                <TableHead>MÃ£ Ä‘Æ¡n</TableHead>
+                <TableHead>Loáº¡i hoa</TableHead>
                 <TableHead>Khung tranh</TableHead>
-                <TableHead>Trạng thái</TableHead>
-                <TableHead>Đánh giá hoa</TableHead>
-                <TableHead>Tổng tiền</TableHead>
-                <TableHead className="text-right">Thao tác</TableHead>
+                <TableHead>Tráº¡ng thÃ¡i</TableHead>
+                <TableHead>ÄÃ¡nh giÃ¡ hoa</TableHead>
+                <TableHead>Tá»•ng tiá»n</TableHead>
+                <TableHead className="text-right">Thao tÃ¡c</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -74,13 +74,13 @@ export default function StaffCustomOrders() {
                 <TableRow key={order.id}>
                   <TableCell className="font-medium">{order.orderCode}</TableCell>
                   <TableCell>{order.flowerType}</TableCell>
-                  <TableCell>{order.selectedFrame?.name || '—'}</TableCell>
+                  <TableCell>{order.selectedFrame?.name || 'â€”'}</TableCell>
                   <TableCell><StatusBadge type="customOrder" status={order.orderStatus} /></TableCell>
                   <TableCell><StatusBadge type="flowerEval" status={order.flowerEvaluationStatus} /></TableCell>
-                  <TableCell>{order.totalAmount.toLocaleString('vi-VN')}đ</TableCell>
+                  <TableCell>{order.totalAmount.toLocaleString('vi-VN')}Ä‘</TableCell>
                   <TableCell className="text-right">
                     <Button variant="ghost" size="sm" onClick={() => setSelectedOrder(order)}>
-                      <Eye className="mr-1 h-4 w-4" /> Chi tiết
+                      <Eye className="mr-1 h-4 w-4" /> Chi tiáº¿t
                     </Button>
                   </TableCell>
                 </TableRow>
@@ -93,17 +93,17 @@ export default function StaffCustomOrders() {
       <Dialog open={!!selectedOrder} onOpenChange={() => setSelectedOrder(null)}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
-            <DialogTitle>Chi tiết đơn {selectedOrder?.orderCode}</DialogTitle>
+            <DialogTitle>Chi tiáº¿t Ä‘Æ¡n {selectedOrder?.orderCode}</DialogTitle>
           </DialogHeader>
           {selectedOrder && (
             <div className="grid grid-cols-2 gap-3 text-sm">
-              <div><span className="text-muted-foreground">Loại hoa:</span> {selectedOrder.flowerType}</div>
-              <div><span className="text-muted-foreground">Khung:</span> {selectedOrder.selectedFrame?.name || '—'}</div>
-              <div><span className="text-muted-foreground">Đặt cọc:</span> {selectedOrder.depositAmount.toLocaleString('vi-VN')}đ</div>
-              <div><span className="text-muted-foreground">Còn lại:</span> {selectedOrder.remainingAmount.toLocaleString('vi-VN')}đ</div>
-              <div className="col-span-2"><span className="text-muted-foreground">Yêu cầu:</span> {selectedOrder.personalizationContent || '—'}</div>
-              <div><span className="text-muted-foreground">Trạng thái:</span> <StatusBadge type="customOrder" status={selectedOrder.orderStatus} /></div>
-              <div><span className="text-muted-foreground">Thanh toán:</span> <StatusBadge type="payment" status={selectedOrder.paymentStatus} /></div>
+              <div><span className="text-muted-foreground">Loáº¡i hoa:</span> {selectedOrder.flowerType}</div>
+              <div><span className="text-muted-foreground">Khung:</span> {selectedOrder.selectedFrame?.name || 'â€”'}</div>
+              <div><span className="text-muted-foreground">Äáº·t cá»c:</span> {selectedOrder.depositAmount.toLocaleString('vi-VN')}Ä‘</div>
+              <div><span className="text-muted-foreground">CÃ²n láº¡i:</span> {selectedOrder.remainingAmount.toLocaleString('vi-VN')}Ä‘</div>
+              <div className="col-span-2"><span className="text-muted-foreground">YÃªu cáº§u:</span> {selectedOrder.personalizationContent || 'â€”'}</div>
+              <div><span className="text-muted-foreground">Tráº¡ng thÃ¡i:</span> <StatusBadge type="customOrder" status={selectedOrder.orderStatus} /></div>
+              <div><span className="text-muted-foreground">Thanh toÃ¡n:</span> <StatusBadge type="payment" status={selectedOrder.paymentStatus} /></div>
             </div>
           )}
         </DialogContent>
@@ -111,4 +111,5 @@ export default function StaffCustomOrders() {
     </div>
   );
 }
+
 

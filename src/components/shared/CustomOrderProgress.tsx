@@ -11,7 +11,8 @@ interface Step {
 
 const STEPS: Step[] = [
   { key: 'deposited', label: 'Đặt cọc', description: 'Đơn hàng đã được tiếp nhận', icon: Coins },
-  { key: 'waiting_flower_review', label: 'Đánh giá hoa', description: 'Tiệm kiểm tra hoa đầu vào', icon: Leaf },
+  { key: 'waiting_flower_review', label: 'Đánh giá hoa', description: 'Tiệm kiểm tra hoa đầu vào qua ảnh', icon: Leaf },
+  { key: 'waiting_flower_receipt', label: 'Nhận hoa từ khách', description: 'Khách hàng gửi hoa đến Dear Floral', icon: PackageCheck },
   { key: 'in_progress', label: 'Đang thực hiện', description: 'Nghệ nhân ép và dựng khung', icon: Sparkles },
   { key: 'waiting_demo_feedback', label: 'Duyệt demo', description: 'Bạn xem và phản hồi bản demo', icon: ImageIcon },
   { key: 'waiting_remaining_payment', label: 'Thanh toán còn lại', description: 'Hoàn tất khoản thanh toán', icon: Wallet },
@@ -34,12 +35,12 @@ export function CustomOrderProgress({ currentStatus, className }: Props) {
     );
   }
 
-  // Map pending statuses to their corresponding step
   const statusMapping: Record<CustomOrderStatus, CustomOrderStatus> = {
     pending_deposit: 'deposited',
     pending_deposit_verification: 'deposited',
     waiting_refund_info: 'deposited',
     waiting_refund: 'deposited',
+    waiting_flower_receipt: 'waiting_flower_receipt',
   } as any;
 
   const effectiveStatus = statusMapping[currentStatus] || currentStatus;
@@ -119,12 +120,13 @@ export function CustomOrderProgress({ currentStatus, className }: Props) {
 export function getCustomOrderStepLabel(status: CustomOrderStatus): { current: number; total: number; label: string } {
   if (status === 'canceled') return { current: 0, total: STEPS.length, label: 'Đã huỷ' };
   if (status === 'refunded') return { current: 0, total: STEPS.length, label: 'Đã hoàn tiền' };
-  
+
   const statusMapping: Record<CustomOrderStatus, CustomOrderStatus> = {
     pending_deposit: 'deposited',
     pending_deposit_verification: 'deposited',
     waiting_refund_info: 'deposited',
     waiting_refund: 'deposited',
+    waiting_flower_receipt: 'waiting_flower_receipt',
   } as any;
 
   const effectiveStatus = statusMapping[status] || status;

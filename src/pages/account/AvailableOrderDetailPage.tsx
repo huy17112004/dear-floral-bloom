@@ -2,39 +2,62 @@ import { useParams, Link } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { StatusBadge } from '@/components/shared/StatusBadge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, BanknoteIcon, Clock, QrCode } from 'lucide-react';
 import { availableOrderApi } from '@/api';
 import { mapAvailableOrder } from '@/api/mappers';
 import type { AvailableOrder } from '@/types';
 import { toast } from 'sonner';
+import { Button } from '@/components/ui/button';
+
+const BANK_INFO = {
+  bankName: 'Vietcombank',
+  accountNumber: '1234567890',
+  accountHolder: 'NGUYEN VAN A',
+};
 
 export default function AvailableOrderDetailPage() {
   const { id } = useParams();
   const [order, setOrder] = useState<AvailableOrder | null>(null);
   const [loading, setLoading] = useState(true);
+  const [confirmingPayment, setConfirmingPayment] = useState(false);
+
+  const loadOrder = async () => {
+    const orderId = Number(id);
+    if (!id || !Number.isFinite(orderId) || orderId <= 0) {
+      toast.error('Mã đơn hàng không hợp lệ');
+      setLoading(false);
+      return;
+    }
+
+    try {
+      const response = await availableOrderApi.getAvailableOrderDetail(orderId);
+      setOrder(mapAvailableOrder(response.data));
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Không thể tải chi tiết đơn hàng';
+      toast.error(message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const load = async () => {
-      const orderId = Number(id);
-      if (!id || !Number.isFinite(orderId) || orderId <= 0) {
-        toast.error('Mã đơn hàng không hợp lệ');
-        setLoading(false);
-        return;
-      }
-
-      try {
-        const response = await availableOrderApi.getAvailableOrderDetail(orderId);
-        setOrder(mapAvailableOrder(response.data));
-      } catch (error) {
-        const message = error instanceof Error ? error.message : 'Không thể tải chi tiết đơn hàng';
-        toast.error(message);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    void load();
+    void loadOrder();
   }, [id]);
+
+  const handleConfirmTransfer = async () => {
+    if (!id) return;
+    try {
+      setConfirmingPayment(true);
+      await availableOrderApi.confirmAvailableOrderPayment(Number(id), {});
+      toast.success('Đã gửi xác nhận chuyển khoản, vui lòng chờ cửa hàng duyệt');
+      await loadOrder();
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Không thể gửi xác nhận chuyển khoản';
+      toast.error(message);
+    } finally {
+      setConfirmingPayment(false);
+    }
+  };
 
   if (loading) {
     return <div className="container py-16 text-center text-caption">Đang tải dữ liệu...</div>;
@@ -56,6 +79,48 @@ export default function AvailableOrderDetailPage() {
       </div>
 
       <div className="space-y-6">
+        {order.orderStatus === 'received' && (order.paymentStatus === 'unpaid' || order.paymentStatus === 'pending') && (
+          <Card className={order.paymentStatus === 'unpaid' ? 'border-primary' : 'border-sky-300'}>
+            <CardHeader>
+              <CardTitle className="font-heading flex items-center gap-2 text-base">
+                <BanknoteIcon className="h-4 w-4" />
+                {order.paymentStatus === 'unpaid' ? 'Thanh toán chuyển khoản' : 'Đang chờ xác nhận thanh toán'}
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {order.paymentStatus === 'unpaid' ? (
+                <div className="space-y-4">
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <div className="flex flex-col items-center gap-2">
+                      <QrCode className="h-5 w-5 text-primary" />
+                      <img
+                        src={`https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=${encodeURIComponent(`${BANK_INFO.bankName}|${BANK_INFO.accountNumber}|${order.totalAmount}|${order.orderCode}`)}`}
+                        alt="QR chuyển khoản"
+                        className="h-40 w-40 rounded-lg border"
+                      />
+                    </div>
+                    <div className="space-y-2 text-sm">
+                      <div className="flex justify-between"><span className="text-caption">Ngân hàng</span><span className="font-medium">{BANK_INFO.bankName}</span></div>
+                      <div className="flex justify-between"><span className="text-caption">Số TK</span><span className="font-mono font-semibold">{BANK_INFO.accountNumber}</span></div>
+                      <div className="flex justify-between"><span className="text-caption">Chủ TK</span><span className="font-medium">{BANK_INFO.accountHolder}</span></div>
+                      <div className="flex justify-between border-t pt-2"><span className="text-caption">Số tiền</span><span className="font-bold text-primary">{order.totalAmount.toLocaleString('vi-VN')}₫</span></div>
+                      <div className="flex justify-between"><span className="text-caption">Nội dung CK</span><span className="font-mono font-semibold">{order.orderCode}</span></div>
+                    </div>
+                  </div>
+                  <Button className="w-full rounded-full" onClick={() => void handleConfirmTransfer()} disabled={confirmingPayment}>
+                    {confirmingPayment ? 'Đang gửi...' : 'Tôi đã chuyển khoản'}
+                  </Button>
+                </div>
+              ) : (
+                <div className="flex items-start gap-2 text-sm text-sky-700">
+                  <Clock className="mt-0.5 h-4 w-4 shrink-0" />
+                  <p>Cửa hàng đang kiểm tra giao dịch. Đơn sẽ chuyển sang chuẩn bị hàng sau khi xác nhận thanh toán.</p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
+
         <Card>
           <CardHeader><CardTitle className="font-heading text-base">Sản phẩm</CardTitle></CardHeader>
           <CardContent className="space-y-3">
@@ -97,3 +162,4 @@ export default function AvailableOrderDetailPage() {
     </div>
   );
 }
+

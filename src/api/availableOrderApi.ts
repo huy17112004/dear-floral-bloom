@@ -53,6 +53,16 @@ export interface UpdateAvailableOrderStatusRequest {
   reason?: string;
 }
 
+export interface ConfirmAvailableOrderPaymentRequest {
+  transactionRef?: string;
+  paymentProofUrl?: string;
+}
+
+export interface VerifyAvailableOrderPaymentRequest {
+  received: boolean;
+  note?: string;
+}
+
 function toBackendEnum(value?: string): string | undefined {
   return value ? value.toUpperCase() : undefined;
 }
@@ -90,5 +100,19 @@ export function updateAdminAvailableOrderStatus(orderId: number, payload: Update
       ...payload,
       status: toBackendEnum(payload.status),
     },
+  });
+}
+
+export function confirmAvailableOrderPayment(orderId: number, payload: ConfirmAvailableOrderPaymentRequest = {}) {
+  return apiRequest<{ orderId: number; orderCode: string; status: string }>(`/api/orders/available/${orderId}/confirm-payment`, {
+    method: 'POST',
+    body: payload,
+  });
+}
+
+export function verifyAvailableOrderPayment(orderId: number, payload: VerifyAvailableOrderPaymentRequest) {
+  return apiRequest<{ orderId: number; orderCode: string; status: string }>(`/api/admin/orders/available/${orderId}/verify-payment`, {
+    method: 'PATCH',
+    body: payload,
   });
 }

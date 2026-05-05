@@ -27,6 +27,7 @@ import AddressManagementPage from "@/pages/account/AddressManagementPage";
 import MyOrdersPage from "@/pages/account/MyOrdersPage";
 import AvailableOrderDetailPage from "@/pages/account/AvailableOrderDetailPage";
 import CreateAvailableOrderPage from "@/pages/account/CreateAvailableOrderPage";
+import CartPage from "@/pages/account/CartPage";
 import CustomOrderDetailPage from "@/pages/account/CustomOrderDetailPage";
 import CreateCustomOrderPage from "@/pages/account/CreateCustomOrderPage";
 
@@ -67,6 +68,7 @@ const App = () => (
             <Route path="/account/profile" element={<ProfilePage />} />
             <Route path="/account/addresses" element={<AddressManagementPage />} />
             <Route path="/account/orders" element={<MyOrdersPage />} />
+            <Route path="/account/cart" element={<CartPage />} />
             <Route path="/account/orders/create" element={<CreateAvailableOrderPage />} />
             <Route path="/account/orders/:id" element={<AvailableOrderDetailPage />} />
             <Route path="/account/custom-orders/create" element={<CreateCustomOrderPage />} />

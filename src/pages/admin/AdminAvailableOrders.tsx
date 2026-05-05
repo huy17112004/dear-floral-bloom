@@ -19,6 +19,7 @@ export default function AdminAvailableOrders() {
   const [orders, setOrders] = useState<AvailableOrder[]>([]);
   const [loading, setLoading] = useState(true);
   const [rejectionReasons, setRejectionReasons] = useState<Record<string, string>>({});
+  const [verifyNotes, setVerifyNotes] = useState<Record<string, string>>({});
   const [loadingActions, setLoadingActions] = useState<Record<string, boolean>>({});
 
   const loadOrders = async () => {
@@ -48,18 +49,26 @@ export default function AdminAvailableOrders() {
     [orders, search]
   );
 
-  const handleApproveOrder = async (orderId: string) => {
+  const runAction = async (orderId: string, handler: () => Promise<void>, successMessage: string) => {
     setLoadingActions(prev => ({ ...prev, [orderId]: true }));
     try {
-      await availableOrderApi.updateAdminAvailableOrderStatus(Number(orderId), { status: 'processing' });
-      toast.success('Đã xác nhận, chuyển sang đang chuẩn bị hàng');
+      await handler();
+      toast.success(successMessage);
       await loadOrders();
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Cập nhật trạng thái thất bại';
+      const message = error instanceof Error ? error.message : 'Cập nhật thất bại';
       toast.error(message);
     } finally {
       setLoadingActions(prev => ({ ...prev, [orderId]: false }));
     }
+  };
+
+  const handleApproveOrder = async (orderId: string) => {
+    await runAction(
+      orderId,
+      () => availableOrderApi.updateAdminAvailableOrderStatus(Number(orderId), { status: 'processing' }).then(() => undefined),
+      'Đã xác nhận đơn, chuyển sang đang chuẩn bị hàng'
+    );
   };
 
   const handleRejectOrder = async (orderId: string) => {
@@ -68,46 +77,36 @@ export default function AdminAvailableOrders() {
       toast.error('Vui lòng nhập lý do từ chối');
       return;
     }
-    setLoadingActions(prev => ({ ...prev, [orderId]: true }));
-    try {
-      await availableOrderApi.updateAdminAvailableOrderStatus(Number(orderId), { status: 'canceled', reason });
-      toast.success('Đã từ chối đơn hàng');
-      setRejectionReasons(prev => ({ ...prev, [orderId]: '' }));
-      await loadOrders();
-    } catch (error) {
-      const message = error instanceof Error ? error.message : 'Cập nhật trạng thái thất bại';
-      toast.error(message);
-    } finally {
-      setLoadingActions(prev => ({ ...prev, [orderId]: false }));
-    }
+    await runAction(
+      orderId,
+      () => availableOrderApi.updateAdminAvailableOrderStatus(Number(orderId), { status: 'canceled', reason }).then(() => undefined),
+      'Đã từ chối đơn hàng'
+    );
+    setRejectionReasons(prev => ({ ...prev, [orderId]: '' }));
+  };
+
+  const handleVerifyPayment = async (orderId: string, received: boolean) => {
+    await runAction(
+      orderId,
+      () => availableOrderApi.verifyAvailableOrderPayment(Number(orderId), { received, note: verifyNotes[orderId] }).then(() => undefined),
+      received ? 'Đã xác nhận nhận được thanh toán' : 'Đã từ chối xác nhận thanh toán'
+    );
   };
 
   const handleMoveToShipping = async (orderId: string) => {
-    setLoadingActions(prev => ({ ...prev, [orderId]: true }));
-    try {
-      await availableOrderApi.updateAdminAvailableOrderStatus(Number(orderId), { status: 'shipping' });
-      toast.success('Đã chuyển sang đang vận chuyển');
-      await loadOrders();
-    } catch (error) {
-      const message = error instanceof Error ? error.message : 'Cập nhật trạng thái thất bại';
-      toast.error(message);
-    } finally {
-      setLoadingActions(prev => ({ ...prev, [orderId]: false }));
-    }
+    await runAction(
+      orderId,
+      () => availableOrderApi.updateAdminAvailableOrderStatus(Number(orderId), { status: 'shipping' }).then(() => undefined),
+      'Đã chuyển sang đang vận chuyển'
+    );
   };
 
   const handleCompleteOrder = async (orderId: string) => {
-    setLoadingActions(prev => ({ ...prev, [orderId]: true }));
-    try {
-      await availableOrderApi.updateAdminAvailableOrderStatus(Number(orderId), { status: 'completed' });
-      toast.success('Đã hoàn thành đơn hàng');
-      await loadOrders();
-    } catch (error) {
-      const message = error instanceof Error ? error.message : 'Cập nhật trạng thái thất bại';
-      toast.error(message);
-    } finally {
-      setLoadingActions(prev => ({ ...prev, [orderId]: false }));
-    }
+    await runAction(
+      orderId,
+      () => availableOrderApi.updateAdminAvailableOrderStatus(Number(orderId), { status: 'completed' }).then(() => undefined),
+      'Đã hoàn thành đơn hàng'
+    );
   };
 
   return (
@@ -182,21 +181,49 @@ export default function AdminAvailableOrders() {
                             <span>{o.totalAmount.toLocaleString('vi-VN')}₫</span>
                           </div>
 
-                          {o.orderStatus === 'received' && (
+                          {o.orderStatus === 'received' && o.paymentStatus === 'pending' && (
+                            <div className="space-y-2 rounded-xl border border-sky-200 bg-sky-50 p-4">
+                              <p className="text-sm font-medium text-heading">Xác nhận thanh toán</p>
+                              <Textarea
+                                placeholder="Ghi chú (không bắt buộc)"
+                                value={verifyNotes[o.id] || ''}
+                                onChange={e => setVerifyNotes(prev => ({ ...prev, [o.id]: e.target.value }))}
+                              />
+                              <div className="flex gap-2">
+                                <Button
+                                  className="flex-1"
+                                  disabled={loadingActions[o.id]}
+                                  onClick={() => void handleVerifyPayment(o.id, true)}
+                                >
+                                  Đã nhận tiền
+                                </Button>
+                                <Button
+                                  variant="outline"
+                                  className="flex-1"
+                                  disabled={loadingActions[o.id]}
+                                  onClick={() => void handleVerifyPayment(o.id, false)}
+                                >
+                                  Chưa nhận được
+                                </Button>
+                              </div>
+                            </div>
+                          )}
+
+                          {o.orderStatus === 'received' && o.paymentStatus === 'paid' && (
                             <div className="space-y-3 rounded-xl border border-yellow-200 bg-yellow-50 p-4">
                               <p className="text-sm font-medium text-heading">Hành động yêu cầu</p>
                               {rejectionReasons[o.id] === undefined ? (
                                 <div className="flex gap-2">
-                                  <Button 
-                                    size="sm" 
+                                  <Button
+                                    size="sm"
                                     className="flex-1 gap-1 rounded-full bg-green-600 hover:bg-green-700"
                                     disabled={loadingActions[o.id]}
                                     onClick={() => void handleApproveOrder(o.id)}
                                   >
-                                    <CheckCircle className="h-3.5 w-3.5" /> Xác nhận
+                                    <CheckCircle className="h-3.5 w-3.5" /> Xác nhận đơn
                                   </Button>
-                                  <Button 
-                                    size="sm" 
+                                  <Button
+                                    size="sm"
                                     variant="outline"
                                     className="flex-1 gap-1 rounded-full border-red-300 text-red-600 hover:bg-red-50"
                                     onClick={() => setRejectionReasons(prev => ({ ...prev, [o.id]: '' }))}
@@ -226,9 +253,9 @@ export default function AdminAvailableOrders() {
                                       variant="outline"
                                       className="flex-1"
                                       onClick={() => setRejectionReasons(prev => {
-                                        const newReasons = { ...prev };
-                                        delete newReasons[o.id];
-                                        return newReasons;
+                                        const next = { ...prev };
+                                        delete next[o.id];
+                                        return next;
                                       })}
                                     >
                                       Hủy
@@ -286,3 +313,4 @@ export default function AdminAvailableOrders() {
     </div>
   );
 }
+

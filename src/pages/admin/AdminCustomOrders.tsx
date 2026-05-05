@@ -60,6 +60,15 @@ export default function AdminCustomOrders() {
     await loadOrders();
   };
 
+  const handleConfirmReceivedFlower = async (orderId: string) => {
+    await adminCustomOrderApi.updateAdminCustomOrderStatus(Number(orderId), {
+      status: 'in_progress',
+      reason: 'Đã nhận hoa khách gửi đến cửa hàng.',
+    });
+    toast.success('Đã xác nhận nhận hoa, đơn chuyển sang Đang thực hiện');
+    await loadOrders();
+  };
+
   const mapDemo = (demo: Awaited<ReturnType<typeof customOrderApi.getCustomOrderDemos>>['data'][number]): CustomDemo => ({
     id: String(demo.demoId),
     customOrderId: String(demo.orderId),
@@ -134,6 +143,7 @@ export default function AdminCustomOrders() {
                 <SelectItem value="pending_deposit">Chờ đặt cọc</SelectItem>
                 <SelectItem value="pending_deposit_verification">Đang xác nhận cọc</SelectItem>
                 <SelectItem value="waiting_flower_review">Chờ đánh giá hoa</SelectItem>
+                <SelectItem value="waiting_flower_receipt">Chờ nhận hoa từ khách</SelectItem>
                 <SelectItem value="in_progress">Đang thực hiện</SelectItem>
                 <SelectItem value="waiting_demo_feedback">Chờ duyệt demo</SelectItem>
                 <SelectItem value="waiting_remaining_payment">Chờ thanh toán</SelectItem>
@@ -244,9 +254,19 @@ export default function AdminCustomOrders() {
                             <div className="space-y-2 rounded-xl border p-3">
                               <Textarea placeholder="Lý do (bắt buộc nếu fail)" value={evalNote[o.id] || ''} onChange={e => setEvalNote(prev => ({ ...prev, [o.id]: e.target.value }))} />
                               <div className="flex gap-2">
-                                <Button className="flex-1" onClick={() => void handleEvaluateFlower(o.id, true)}>Chuyển sang thực hiện</Button>
+                                <Button className="flex-1" onClick={() => void handleEvaluateFlower(o.id, true)}>Xác nhận ảnh đạt (chưa nhận hoa)</Button>
                                 <Button variant="destructive" className="flex-1" onClick={() => void handleEvaluateFlower(o.id, false)}>Từ chối</Button>
                               </div>
+                            </div>
+                          )}
+                          {o.orderStatus === 'waiting_flower_receipt' && (
+                            <div className="space-y-2 rounded-xl border p-3">
+                              <p className="text-sm text-caption">
+                                Đơn đã qua bước đánh giá ảnh hoa. Chờ khách gửi hoa thật đến cửa hàng.
+                              </p>
+                              <Button className="w-full" onClick={() => void handleConfirmReceivedFlower(o.id)}>
+                                Xác nhận đã nhận hoa từ khách
+                              </Button>
                             </div>
                           )}
                           {o.orderStatus === 'in_progress' && (
