@@ -80,7 +80,7 @@ export default function AdminAvailableOrders() {
     await runAction(
       orderId,
       () => availableOrderApi.updateAdminAvailableOrderStatus(Number(orderId), { status: 'canceled', reason }).then(() => undefined),
-      'Đã từ chối đơn hàng'
+      'Đã xử lý từ chối đơn hàng'
     );
     setRejectionReasons(prev => ({ ...prev, [orderId]: '' }));
   };
@@ -109,6 +109,14 @@ export default function AdminAvailableOrders() {
     );
   };
 
+  const handleConfirmRefund = async (orderId: string) => {
+    await runAction(
+      orderId,
+      () => availableOrderApi.confirmAvailableOrderRefund(Number(orderId)).then(() => undefined),
+      'Đã xác nhận hoàn tiền cho đơn hàng'
+    );
+  };
+
   return (
     <div className="space-y-6">
       <h1 className="font-heading text-2xl font-bold text-heading">Đơn hàng thường</h1>
@@ -121,12 +129,15 @@ export default function AdminAvailableOrders() {
               <Input placeholder="Tìm mã đơn..." value={search} onChange={e => setSearch(e.target.value)} className="pl-10" />
             </div>
             <Select value={statusFilter} onValueChange={v => setStatusFilter(v as AvailableOrderStatus | 'all')}>
-              <SelectTrigger className="w-48"><SelectValue /></SelectTrigger>
+              <SelectTrigger className="w-56"><SelectValue /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Tất cả</SelectItem>
                 <SelectItem value="received">Đã tiếp nhận</SelectItem>
                 <SelectItem value="processing">Đang chuẩn bị</SelectItem>
                 <SelectItem value="shipping">Đang giao</SelectItem>
+                <SelectItem value="waiting_refund_info">Chờ thông tin hoàn tiền</SelectItem>
+                <SelectItem value="waiting_refund">Chờ hoàn tiền</SelectItem>
+                <SelectItem value="refunded">Đã hoàn tiền</SelectItem>
                 <SelectItem value="completed">Hoàn thành</SelectItem>
                 <SelectItem value="canceled">Đã hủy</SelectItem>
               </SelectContent>
@@ -181,6 +192,15 @@ export default function AdminAvailableOrders() {
                             <span>{o.totalAmount.toLocaleString('vi-VN')}₫</span>
                           </div>
 
+                          {(o.refundBankName || o.refundAccountNumber || o.refundAccountName || o.orderStatus === 'waiting_refund' || o.orderStatus === 'refunded') && (
+                            <div className="rounded-lg border bg-surface-warm p-3 text-sm space-y-1">
+                              <p className="font-medium text-heading">Thông tin hoàn tiền</p>
+                              <p><span className="text-caption">Ngân hàng:</span> {o.refundBankName || '—'}</p>
+                              <p><span className="text-caption">Số tài khoản:</span> {o.refundAccountNumber || '—'}</p>
+                              <p><span className="text-caption">Chủ tài khoản:</span> {o.refundAccountName || '—'}</p>
+                            </div>
+                          )}
+
                           {o.orderStatus === 'received' && o.paymentStatus === 'pending' && (
                             <div className="space-y-2 rounded-xl border border-sky-200 bg-sky-50 p-4">
                               <p className="text-sm font-medium text-heading">Xác nhận thanh toán</p>
@@ -190,21 +210,8 @@ export default function AdminAvailableOrders() {
                                 onChange={e => setVerifyNotes(prev => ({ ...prev, [o.id]: e.target.value }))}
                               />
                               <div className="flex gap-2">
-                                <Button
-                                  className="flex-1"
-                                  disabled={loadingActions[o.id]}
-                                  onClick={() => void handleVerifyPayment(o.id, true)}
-                                >
-                                  Đã nhận tiền
-                                </Button>
-                                <Button
-                                  variant="outline"
-                                  className="flex-1"
-                                  disabled={loadingActions[o.id]}
-                                  onClick={() => void handleVerifyPayment(o.id, false)}
-                                >
-                                  Chưa nhận được
-                                </Button>
+                                <Button className="flex-1" disabled={loadingActions[o.id]} onClick={() => void handleVerifyPayment(o.id, true)}>Đã nhận tiền</Button>
+                                <Button variant="outline" className="flex-1" disabled={loadingActions[o.id]} onClick={() => void handleVerifyPayment(o.id, false)}>Chưa nhận được</Button>
                               </div>
                             </div>
                           )}
@@ -214,20 +221,10 @@ export default function AdminAvailableOrders() {
                               <p className="text-sm font-medium text-heading">Hành động yêu cầu</p>
                               {rejectionReasons[o.id] === undefined ? (
                                 <div className="flex gap-2">
-                                  <Button
-                                    size="sm"
-                                    className="flex-1 gap-1 rounded-full bg-green-600 hover:bg-green-700"
-                                    disabled={loadingActions[o.id]}
-                                    onClick={() => void handleApproveOrder(o.id)}
-                                  >
+                                  <Button size="sm" className="flex-1 gap-1 rounded-full bg-green-600 hover:bg-green-700" disabled={loadingActions[o.id]} onClick={() => void handleApproveOrder(o.id)}>
                                     <CheckCircle className="h-3.5 w-3.5" /> Xác nhận đơn
                                   </Button>
-                                  <Button
-                                    size="sm"
-                                    variant="outline"
-                                    className="flex-1 gap-1 rounded-full border-red-300 text-red-600 hover:bg-red-50"
-                                    onClick={() => setRejectionReasons(prev => ({ ...prev, [o.id]: '' }))}
-                                  >
+                                  <Button size="sm" variant="outline" className="flex-1 gap-1 rounded-full border-red-300 text-red-600 hover:bg-red-50" onClick={() => setRejectionReasons(prev => ({ ...prev, [o.id]: '' }))}>
                                     <XCircle className="h-3.5 w-3.5" /> Từ chối
                                   </Button>
                                 </div>
@@ -239,27 +236,8 @@ export default function AdminAvailableOrders() {
                                     onChange={e => setRejectionReasons(prev => ({ ...prev, [o.id]: e.target.value }))}
                                   />
                                   <div className="flex gap-2">
-                                    <Button
-                                      size="sm"
-                                      variant="destructive"
-                                      className="flex-1"
-                                      disabled={loadingActions[o.id]}
-                                      onClick={() => void handleRejectOrder(o.id)}
-                                    >
-                                      Xác nhận từ chối
-                                    </Button>
-                                    <Button
-                                      size="sm"
-                                      variant="outline"
-                                      className="flex-1"
-                                      onClick={() => setRejectionReasons(prev => {
-                                        const next = { ...prev };
-                                        delete next[o.id];
-                                        return next;
-                                      })}
-                                    >
-                                      Hủy
-                                    </Button>
+                                    <Button size="sm" variant="destructive" className="flex-1" disabled={loadingActions[o.id]} onClick={() => void handleRejectOrder(o.id)}>Xác nhận từ chối</Button>
+                                    <Button size="sm" variant="outline" className="flex-1" onClick={() => setRejectionReasons(prev => { const next = { ...prev }; delete next[o.id]; return next; })}>Huỷ</Button>
                                   </div>
                                 </div>
                               )}
@@ -269,11 +247,7 @@ export default function AdminAvailableOrders() {
                           {o.orderStatus === 'processing' && (
                             <div className="space-y-2 rounded-xl border border-blue-200 bg-blue-50 p-4">
                               <p className="text-sm font-medium text-heading">Hành động yêu cầu</p>
-                              <Button
-                                className="w-full rounded-full bg-blue-600 hover:bg-blue-700"
-                                disabled={loadingActions[o.id]}
-                                onClick={() => void handleMoveToShipping(o.id)}
-                              >
+                              <Button className="w-full rounded-full bg-blue-600 hover:bg-blue-700" disabled={loadingActions[o.id]} onClick={() => void handleMoveToShipping(o.id)}>
                                 Chuyển sang vận chuyển
                               </Button>
                             </div>
@@ -291,12 +265,17 @@ export default function AdminAvailableOrders() {
                               ) : (
                                 <p className="text-sm text-caption">Không có thông tin địa chỉ</p>
                               )}
-                              <Button
-                                className="w-full rounded-full bg-purple-600 hover:bg-purple-700 mt-3"
-                                disabled={loadingActions[o.id]}
-                                onClick={() => void handleCompleteOrder(o.id)}
-                              >
+                              <Button className="w-full rounded-full bg-purple-600 hover:bg-purple-700 mt-3" disabled={loadingActions[o.id]} onClick={() => void handleCompleteOrder(o.id)}>
                                 Xác nhận hoàn thành
+                              </Button>
+                            </div>
+                          )}
+
+                          {o.orderStatus === 'waiting_refund' && (
+                            <div className="space-y-2 rounded-xl border border-red-200 bg-red-50 p-4">
+                              <p className="text-sm font-medium text-heading">Hoàn tiền</p>
+                              <Button className="w-full rounded-full" variant="destructive" disabled={loadingActions[o.id]} onClick={() => void handleConfirmRefund(o.id)}>
+                                Xác nhận đã hoàn tiền
                               </Button>
                             </div>
                           )}

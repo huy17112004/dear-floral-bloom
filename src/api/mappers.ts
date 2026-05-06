@@ -199,5 +199,8 @@ export function mapAvailableOrder(response: AvailableOrderResponse): AvailableOr
     })),
     orderedAt: response.orderedAt ?? '',
     rejectionReason: response.rejectionReason,
+    refundBankName: response.refundBankName ?? undefined,
+    refundAccountNumber: response.refundAccountNumber ?? undefined,
+    refundAccountName: response.refundAccountName ?? undefined,
   };
 }

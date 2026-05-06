@@ -13,6 +13,9 @@ const availableOrderLabels: Record<AvailableOrderStatus, { label: string; classN
   received: { label: 'Đã tiếp nhận', className: 'bg-blue-100 text-blue-800 border-blue-200' },
   processing: { label: 'Đang xử lý', className: 'bg-amber-100 text-amber-800 border-amber-200' },
   shipping: { label: 'Đang giao', className: 'bg-purple-100 text-purple-800 border-purple-200' },
+  waiting_refund_info: { label: 'Chờ thông tin hoàn tiền', className: 'bg-rose-100 text-rose-800 border-rose-200' },
+  waiting_refund: { label: 'Chờ hoàn tiền', className: 'bg-red-100 text-red-800 border-red-200' },
+  refunded: { label: 'Đã hoàn tiền', className: 'bg-emerald-100 text-emerald-800 border-emerald-200' },
   completed: { label: 'Hoàn thành', className: 'bg-green-100 text-green-800 border-green-200' },
   canceled: { label: 'Đã hủy', className: 'bg-red-100 text-red-800 border-red-200' },
 };
@@ -89,3 +92,4 @@ export function StatusBadge({ type, status }: StatusBadgeProps) {
     </Badge>
   );
 }
+

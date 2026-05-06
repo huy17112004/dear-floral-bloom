@@ -108,10 +108,7 @@ export default function ProductDetailPage() {
               <Button
                 size="lg"
                 className="w-full gap-2 rounded-full sm:w-auto sm:px-12"
-                onClick={() => {
-                  handleAddToCart();
-                  navigate('/account/cart');
-                }}
+                  onClick={() => navigate('/account/cart')}
               >
                 <ShoppingBag className="h-4 w-4" /> Đến giỏ hàng
               </Button>

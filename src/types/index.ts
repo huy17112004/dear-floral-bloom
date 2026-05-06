@@ -6,7 +6,15 @@ export type ProductKind = 'standard_product' | 'frame_option';
 
 export type ProductStatus = 'active' | 'inactive';
 
-export type AvailableOrderStatus = 'received' | 'processing' | 'shipping' | 'completed' | 'canceled';
+export type AvailableOrderStatus =
+  | 'received'
+  | 'processing'
+  | 'shipping'
+  | 'waiting_refund_info'
+  | 'waiting_refund'
+  | 'refunded'
+  | 'completed'
+  | 'canceled';
 
 export type CustomOrderStatus =
   | 'pending_deposit'
@@ -129,6 +137,9 @@ export interface AvailableOrder {
   transactionRef?: string;
   paymentProofUrl?: string;
   paidAt?: string;
+  refundBankName?: string;
+  refundAccountNumber?: string;
+  refundAccountName?: string;
   totalAmount: number;
   items?: AvailableOrderItem[];
   orderedAt: string;

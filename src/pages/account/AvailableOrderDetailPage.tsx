@@ -8,6 +8,8 @@ import { mapAvailableOrder } from '@/api/mappers';
 import type { AvailableOrder } from '@/types';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
+import { AvailableOrderProgress } from '@/components/shared/AvailableOrderProgress';
+import { Input } from '@/components/ui/input';
 
 const BANK_INFO = {
   bankName: 'Vietcombank',
@@ -20,6 +22,9 @@ export default function AvailableOrderDetailPage() {
   const [order, setOrder] = useState<AvailableOrder | null>(null);
   const [loading, setLoading] = useState(true);
   const [confirmingPayment, setConfirmingPayment] = useState(false);
+  const [refundBankName, setRefundBankName] = useState('');
+  const [refundAccountNumber, setRefundAccountNumber] = useState('');
+  const [refundAccountName, setRefundAccountName] = useState('');
 
   const loadOrder = async () => {
     const orderId = Number(id);
@@ -59,6 +64,22 @@ export default function AvailableOrderDetailPage() {
     }
   };
 
+  const handleSubmitRefundInfo = async () => {
+    if (!id) return;
+    try {
+      await availableOrderApi.submitAvailableOrderRefundInfo(Number(id), {
+        refundBankName,
+        refundAccountNumber,
+        refundAccountName,
+      });
+      toast.success('Đã gửi thông tin hoàn tiền');
+      await loadOrder();
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Không thể gửi thông tin hoàn tiền';
+      toast.error(message);
+    }
+  };
+
   if (loading) {
     return <div className="container py-16 text-center text-caption">Đang tải dữ liệu...</div>;
   }
@@ -76,6 +97,10 @@ export default function AvailableOrderDetailPage() {
       <div className="mb-6 flex items-center gap-3">
         <h1 className="font-heading text-2xl font-bold text-heading">{order.orderCode}</h1>
         <StatusBadge type="availableOrder" status={order.orderStatus} />
+      </div>
+
+      <div className="mb-6">
+        <AvailableOrderProgress currentStatus={order.orderStatus} />
       </div>
 
       <div className="space-y-6">
@@ -117,6 +142,30 @@ export default function AvailableOrderDetailPage() {
                   <p>Cửa hàng đang kiểm tra giao dịch. Đơn sẽ chuyển sang chuẩn bị hàng sau khi xác nhận thanh toán.</p>
                 </div>
               )}
+            </CardContent>
+          </Card>
+        )}
+
+        {order.orderStatus === 'waiting_refund_info' && (
+          <Card className="border-red-300">
+            <CardHeader><CardTitle className="font-heading text-base text-red-700">Đơn bị từ chối, vui lòng nhập thông tin hoàn tiền</CardTitle></CardHeader>
+            <CardContent className="space-y-3">
+              {order.rejectionReason && <p className="text-sm"><b>Lý do:</b> {order.rejectionReason}</p>}
+              <Input placeholder="Tên ngân hàng" value={refundBankName} onChange={e => setRefundBankName(e.target.value)} />
+              <Input placeholder="Số tài khoản" value={refundAccountNumber} onChange={e => setRefundAccountNumber(e.target.value)} />
+              <Input placeholder="Chủ tài khoản" value={refundAccountName} onChange={e => setRefundAccountName(e.target.value)} />
+              <Button className="rounded-full" onClick={() => void handleSubmitRefundInfo()}>Gửi thông tin hoàn tiền</Button>
+            </CardContent>
+          </Card>
+        )}
+
+        {(order.refundBankName || order.refundAccountNumber || order.refundAccountName || order.orderStatus === 'waiting_refund' || order.orderStatus === 'refunded') && (
+          <Card>
+            <CardHeader><CardTitle className="font-heading text-base">Thông tin hoàn tiền</CardTitle></CardHeader>
+            <CardContent className="space-y-2 text-sm">
+              <div className="flex justify-between"><span className="text-caption">Ngân hàng</span><span className="font-medium">{order.refundBankName || '—'}</span></div>
+              <div className="flex justify-between"><span className="text-caption">Số tài khoản</span><span className="font-medium">{order.refundAccountNumber || '—'}</span></div>
+              <div className="flex justify-between"><span className="text-caption">Chủ tài khoản</span><span className="font-medium">{order.refundAccountName || '—'}</span></div>
             </CardContent>
           </Card>
         )}
