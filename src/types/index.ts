@@ -22,6 +22,7 @@ export type CustomOrderStatus =
   | 'deposited'
   | 'waiting_flower_review'
   | 'waiting_flower_receipt'
+  | 'waiting_received_flower_review'
   | 'in_progress'
   | 'waiting_demo_feedback'
   | 'waiting_remaining_payment'
@@ -188,6 +189,9 @@ export interface CustomOrder {
   flowerInputImageUrl?: string;
   flowerEvaluationStatus: FlowerEvaluationStatus;
   flowerEvaluationNote?: string;
+  receivedFlowerImageUrl?: string;
+  receivedFlowerEvaluationStatus?: FlowerEvaluationStatus;
+  receivedFlowerEvaluationNote?: string;
   rejectionReason?: string;
   refundBankName?: string;
   refundAccountNumber?: string;

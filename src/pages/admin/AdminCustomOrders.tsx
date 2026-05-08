@@ -23,6 +23,7 @@ export default function AdminCustomOrders() {
   const [demoFiles, setDemoFiles] = useState<Record<string, File[]>>({});
   const [demoDesc, setDemoDesc] = useState<Record<string, string>>({});
   const [verifyNote, setVerifyNote] = useState<Record<string, string>>({});
+  const [receivedFlowerFiles, setReceivedFlowerFiles] = useState<Record<string, File | null>>({});
   const [demosByOrder, setDemosByOrder] = useState<Record<string, CustomDemo[]>>({});
 
   const loadOrders = async () => {
@@ -61,11 +62,25 @@ export default function AdminCustomOrders() {
   };
 
   const handleConfirmReceivedFlower = async (orderId: string) => {
-    await adminCustomOrderApi.updateAdminCustomOrderStatus(Number(orderId), {
-      status: 'in_progress',
-      reason: 'Đã nhận hoa khách gửi đến cửa hàng.',
+    const receivedFlowerImageFile = receivedFlowerFiles[orderId];
+    if (!receivedFlowerImageFile) {
+      toast.error('Vui lòng tải ảnh hoa thực tế đã nhận');
+      return;
+    }
+    await adminCustomOrderApi.confirmReceivedFlower(Number(orderId), {
+      receivedFlowerImageFile,
+      note: 'Đã nhận hoa khách gửi đến cửa hàng.',
     });
-    toast.success('Đã xác nhận nhận hoa, đơn chuyển sang Đang thực hiện');
+    toast.success('Đã xác nhận nhận hoa, đơn chuyển sang chờ đánh giá hoa thực tế');
+    await loadOrders();
+  };
+
+  const handleEvaluateReceivedFlower = async (orderId: string, pass: boolean) => {
+    await adminCustomOrderApi.evaluateReceivedFlower(Number(orderId), {
+      evaluationStatus: pass ? 'pass' : 'fail',
+      evaluationNote: evalNote[orderId],
+    });
+    toast.success('Đã cập nhật đánh giá hoa thực tế');
     await loadOrders();
   };
 
@@ -144,6 +159,7 @@ export default function AdminCustomOrders() {
                 <SelectItem value="pending_deposit_verification">Đang xác nhận cọc</SelectItem>
                 <SelectItem value="waiting_flower_review">Chờ đánh giá hoa</SelectItem>
                 <SelectItem value="waiting_flower_receipt">Chờ nhận hoa từ khách</SelectItem>
+                <SelectItem value="waiting_received_flower_review">Chờ đánh giá hoa thực tế</SelectItem>
                 <SelectItem value="in_progress">Đang thực hiện</SelectItem>
                 <SelectItem value="waiting_demo_feedback">Chờ duyệt demo</SelectItem>
                 <SelectItem value="waiting_remaining_payment">Chờ thanh toán</SelectItem>
@@ -264,9 +280,36 @@ export default function AdminCustomOrders() {
                               <p className="text-sm text-caption">
                                 Đơn đã qua bước đánh giá ảnh hoa. Chờ khách gửi hoa thật đến cửa hàng.
                               </p>
+                              <Input
+                                type="file"
+                                accept="image/*"
+                                onChange={e => setReceivedFlowerFiles(prev => ({ ...prev, [o.id]: e.target.files?.[0] || null }))}
+                              />
+                              {receivedFlowerFiles[o.id] && (
+                                <p className="text-xs text-caption">Đã chọn: {receivedFlowerFiles[o.id]?.name}</p>
+                              )}
                               <Button className="w-full" onClick={() => void handleConfirmReceivedFlower(o.id)}>
                                 Xác nhận đã nhận hoa từ khách
                               </Button>
+                            </div>
+                          )}
+                          {o.orderStatus === 'waiting_received_flower_review' && (
+                            <div className="space-y-2 rounded-xl border p-3">
+                              {o.receivedFlowerImageUrl && (
+                                <div>
+                                  <p className="text-caption mb-1">Ảnh hoa thực tế đã nhận</p>
+                                  <img
+                                    src={resolveImageUrl(o.receivedFlowerImageUrl)}
+                                    alt="Ảnh hoa thực tế đã nhận"
+                                    className="max-h-56 w-full rounded-lg border object-cover"
+                                  />
+                                </div>
+                              )}
+                              <Textarea placeholder="Lý do (bắt buộc nếu fail)" value={evalNote[o.id] || ''} onChange={e => setEvalNote(prev => ({ ...prev, [o.id]: e.target.value }))} />
+                              <div className="flex gap-2">
+                                <Button className="flex-1" onClick={() => void handleEvaluateReceivedFlower(o.id, true)}>Xác nhận hoa thực tế đạt</Button>
+                                <Button variant="destructive" className="flex-1" onClick={() => void handleEvaluateReceivedFlower(o.id, false)}>Từ chối</Button>
+                              </div>
                             </div>
                           )}
                           {o.orderStatus === 'in_progress' && (

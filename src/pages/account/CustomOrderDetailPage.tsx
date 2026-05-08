@@ -217,8 +217,31 @@ export default function CustomOrderDetailPage() {
                 </ul>
               </div>
               <p className="text-caption">
-                Sau khi cửa hàng xác nhận đã nhận hoa, trạng thái đơn sẽ chuyển sang <strong>Đang thực hiện</strong>.
+                Sau khi cửa hàng xác nhận đã nhận hoa, đơn sẽ chuyển sang bước <strong>Đánh giá hoa thực tế</strong>.
               </p>
+            </CardContent>
+          </Card>
+        )}
+
+        {order.orderStatus === 'waiting_received_flower_review' && (
+          <Card className="border-cyan-300">
+            <CardHeader>
+              <CardTitle className="font-heading text-base text-cyan-700">Đang đánh giá hoa thực tế đã nhận</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3 text-sm">
+              <p className="text-body">
+                Dear Floral đã nhận hoa của bạn và đang kiểm tra chất lượng thực tế trước khi bắt đầu thực hiện đơn.
+              </p>
+              {order.receivedFlowerImageUrl && (
+                <div>
+                  <p className="mb-2 text-caption">Ảnh hoa thực tế cửa hàng đã nhận</p>
+                  <img
+                    src={resolveImageUrl(order.receivedFlowerImageUrl)}
+                    alt="Ảnh hoa thực tế đã nhận"
+                    className="max-h-72 w-full rounded-lg border object-cover"
+                  />
+                </div>
+              )}
             </CardContent>
           </Card>
         )}
@@ -250,6 +273,16 @@ export default function CustomOrderDetailPage() {
                 <img
                   src={resolveImageUrl(order.flowerInputImageUrl)}
                   alt="Ảnh hoa khách gửi"
+                  className="max-h-72 w-full rounded-lg border object-cover"
+                />
+              </div>
+            )}
+            {order.receivedFlowerImageUrl && (
+              <div className="pt-2">
+                <p className="mb-2 text-caption">Ảnh hoa thực tế đã nhận</p>
+                <img
+                  src={resolveImageUrl(order.receivedFlowerImageUrl)}
+                  alt="Ảnh hoa thực tế đã nhận"
                   className="max-h-72 w-full rounded-lg border object-cover"
                 />
               </div>

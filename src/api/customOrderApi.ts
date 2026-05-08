@@ -22,6 +22,9 @@ export interface CustomOrderResponse {
   flowerInputImageUrl?: string;
   flowerEvaluationStatus?: string;
   flowerEvaluationNote?: string;
+  receivedFlowerImageUrl?: string;
+  receivedFlowerEvaluationStatus?: string;
+  receivedFlowerEvaluationNote?: string;
   rejectionReason?: string;
   refundBankName?: string;
   refundAccountNumber?: string;

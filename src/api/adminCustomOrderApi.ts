@@ -20,6 +20,11 @@ export interface EvaluateFlowerInputRequest {
   evaluationNote?: string;
 }
 
+export interface ConfirmReceivedFlowerRequest {
+  receivedFlowerImageFile: File;
+  note?: string;
+}
+
 export interface UpdateCustomDeliveryRequest {
   deliveryType: 'PICKUP_INPUT' | 'SHIP_OUTPUT';
   deliveryStatus: string;
@@ -73,6 +78,32 @@ export function verifyCustomOrderDeposit(orderId: number, accepted: boolean) {
 export function evaluateCustomOrderFlowerInput(orderId: number, payload: EvaluateFlowerInputRequest) {
   return apiRequest<{ orderId: number; flowerEvaluationStatus: string; nextStep: string }>(
     `/api/admin/orders/custom/${orderId}/evaluate-flower-input`,
+    {
+      method: 'PATCH',
+      body: {
+        ...payload,
+        evaluationStatus: toBackendEnum(payload.evaluationStatus),
+      },
+    }
+  );
+}
+
+export function confirmReceivedFlower(orderId: number, payload: ConfirmReceivedFlowerRequest) {
+  const formData = new FormData();
+  formData.append('receivedFlowerImageFile', payload.receivedFlowerImageFile);
+  if (payload.note) formData.append('note', payload.note);
+  return apiRequest<{ orderId: number; orderCode: string; status: string }>(
+    `/api/admin/orders/custom/${orderId}/confirm-received-flower`,
+    {
+      method: 'PATCH',
+      body: formData,
+    }
+  );
+}
+
+export function evaluateReceivedFlower(orderId: number, payload: EvaluateFlowerInputRequest) {
+  return apiRequest<{ orderId: number; flowerEvaluationStatus: string; nextStep: string }>(
+    `/api/admin/orders/custom/${orderId}/evaluate-received-flower`,
     {
       method: 'PATCH',
       body: {

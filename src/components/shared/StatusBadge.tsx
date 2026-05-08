@@ -26,6 +26,7 @@ const customOrderLabels: Record<CustomOrderStatus, { label: string; className: s
   deposited: { label: 'Đã đặt cọc', className: 'bg-blue-100 text-blue-800 border-blue-200' },
   waiting_flower_review: { label: 'Chờ đánh giá hoa', className: 'bg-amber-100 text-amber-800 border-amber-200' },
   waiting_flower_receipt: { label: 'Chờ nhận hoa từ khách', className: 'bg-teal-100 text-teal-800 border-teal-200' },
+  waiting_received_flower_review: { label: 'Chờ đánh giá hoa thực tế', className: 'bg-cyan-100 text-cyan-800 border-cyan-200' },
   in_progress: { label: 'Đang thực hiện', className: 'bg-indigo-100 text-indigo-800 border-indigo-200' },
   waiting_demo_feedback: { label: 'Chờ duyệt demo', className: 'bg-purple-100 text-purple-800 border-purple-200' },
   waiting_remaining_payment: { label: 'Chờ thanh toán', className: 'bg-orange-100 text-orange-800 border-orange-200' },
