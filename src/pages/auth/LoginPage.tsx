@@ -20,13 +20,24 @@ export default function LoginPage() {
 
     try {
       const response = await authApi.login({ email, password });
+      const normalizedRole = response.data?.role?.toLowerCase();
+
       if (response.data?.accessToken) {
         localStorage.setItem('accessToken', response.data.accessToken);
       }
-      if (response.data?.role) {
-        localStorage.setItem('role', response.data.role.toLowerCase());
+      if (normalizedRole) {
+        localStorage.setItem('role', normalizedRole);
       }
+
       toast.success('Đăng nhập thành công');
+      if (normalizedRole === 'staff') {
+        navigate('/staff/dashboard');
+        return;
+      }
+      if (normalizedRole === 'admin') {
+        navigate('/admin/dashboard');
+        return;
+      }
       navigate('/');
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Đăng nhập thất bại';

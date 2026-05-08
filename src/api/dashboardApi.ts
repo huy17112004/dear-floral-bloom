@@ -20,6 +20,7 @@ export interface StaffDashboardResponse {
   pendingAvailableOrders: number;
   pendingCustomOrders: number;
   demosPendingApproval: number;
+  lowInventoryThreshold: number;
   lowInventoryProducts: LowInventoryProductResponse[];
   recentOrdersToday: RecentOrderResponse[];
 }

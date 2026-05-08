@@ -1,4 +1,4 @@
-import type { CustomerAddress } from '@/types';
+﻿import type { CustomerAddress } from '@/types';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { MapPin, Phone, User } from 'lucide-react';
@@ -43,11 +43,11 @@ export function AddressCard({ address, onEdit, onDelete, onSetDefault, selected,
         </div>
         {(onEdit || onDelete || onSetDefault) && (
           <div className="mt-3 flex gap-2 border-t pt-3">
-            {onEdit && <button onClick={onEdit} className="text-xs text-primary hover:underline">Sửa</button>}
+            {onEdit && <button onClick={(event) => { event.stopPropagation(); onEdit(); }} className="text-xs text-primary hover:underline">Sửa</button>}
             {!address.isDefault && onSetDefault && (
-              <button onClick={onSetDefault} className="text-xs text-primary hover:underline">Đặt mặc định</button>
+              <button onClick={(event) => { event.stopPropagation(); onSetDefault(); }} className="text-xs text-primary hover:underline">Đặt mặc định</button>
             )}
-            {onDelete && <button onClick={onDelete} className="text-xs text-destructive hover:underline">Xóa</button>}
+            {onDelete && <button onClick={(event) => { event.stopPropagation(); onDelete(); }} className="text-xs text-destructive hover:underline">Xóa</button>}
           </div>
         )}
       </CardContent>

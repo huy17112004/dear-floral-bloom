@@ -3,7 +3,7 @@ import type { ProductKind } from '@/types';
 
 export interface ProductResponse {
   productId: number;
-  categoryId: number;
+  categoryId?: number | null;
   categoryName?: string;
   name: string;
   slug?: string;
@@ -37,7 +37,7 @@ export interface ProductUpsertRequest {
   name: string;
   description: string;
   price: number;
-  categoryId: number;
+  categoryId?: number;
   productKind: ProductKind;
   isSellableDirectly: boolean;
   isCustomSelectable: boolean;
@@ -47,6 +47,7 @@ export interface ProductUpsertRequest {
   flowerType?: string;
   status: string;
   image?: File;
+  images?: File[];
 }
 
 function toProductFormData(payload: ProductUpsertRequest): FormData {
@@ -54,7 +55,9 @@ function toProductFormData(payload: ProductUpsertRequest): FormData {
   formData.append('name', payload.name);
   formData.append('description', payload.description);
   formData.append('price', String(payload.price));
-  formData.append('categoryId', String(payload.categoryId));
+  if (payload.categoryId !== undefined && payload.categoryId !== null) {
+    formData.append('categoryId', String(payload.categoryId));
+  }
   formData.append('productKind', payload.productKind.toUpperCase());
   formData.append('isSellableDirectly', String(payload.isSellableDirectly));
   formData.append('isCustomSelectable', String(payload.isCustomSelectable));
@@ -65,6 +68,11 @@ function toProductFormData(payload: ProductUpsertRequest): FormData {
   if (payload.flowerType) formData.append('flowerType', payload.flowerType);
   if (payload.imageUrl) formData.append('imageUrl', payload.imageUrl);
   if (payload.image) formData.append('imageFile', payload.image);
+  if (payload.images && payload.images.length > 0) {
+    payload.images.forEach(image => {
+      formData.append('imageFiles', image);
+    });
+  }
 
   return formData;
 }

@@ -28,6 +28,12 @@ export interface CreatePurchaseReceiptRequest {
   items: CreatePurchaseReceiptItemRequest[];
 }
 
+export interface UpdatePurchaseReceiptRequest {
+  receiptDate: string;
+  note?: string;
+  items: CreatePurchaseReceiptItemRequest[];
+}
+
 interface PurchaseReceiptQuery {
   fromDate?: string;
   toDate?: string;
@@ -45,4 +51,11 @@ export function createPurchaseReceipt(payload: CreatePurchaseReceiptRequest) {
 
 export function getPurchaseReceipts(query: PurchaseReceiptQuery = {}) {
   return apiRequest<PurchaseReceiptResponse[]>('/api/admin/purchase-receipts', { query });
+}
+
+export function updatePurchaseReceipt(receiptId: number, payload: UpdatePurchaseReceiptRequest) {
+  return apiRequest<PurchaseReceiptResponse>(`/api/admin/purchase-receipts/${receiptId}`, {
+    method: 'PUT',
+    body: payload,
+  });
 }

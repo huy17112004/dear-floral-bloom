@@ -33,9 +33,13 @@ export default function ContactPage() {
               <div className="rounded-lg bg-primary/10 p-3"><MapPin className="h-5 w-5 text-primary" /></div>
               <div>
                 <h3 className="font-heading font-semibold text-heading">Địa chỉ</h3>
+<<<<<<< HEAD
                 <p className="text-sm text-body">TP. Hà Nội, Việt Nam <br/>
                   TP. Hồ Chí Minh, Việt Nam
                 </p>
+=======
+                <p className="text-sm text-body">TP. Hà Nội, Việt Nam <br /> TP. Hồ Chí Minh, Việt Nam</p>
+>>>>>>> main
               </div>
             </div>
           </div>

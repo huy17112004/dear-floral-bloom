@@ -20,16 +20,29 @@ export interface EvaluateFlowerInputRequest {
   evaluationNote?: string;
 }
 
+export interface ConfirmReceivedFlowerRequest {
+  receivedFlowerImageFile: File;
+  note?: string;
+}
+
 export interface UpdateCustomDeliveryRequest {
-  deliveryType: 'pickup_input' | 'ship_output';
+  deliveryType: 'PICKUP_INPUT' | 'SHIP_OUTPUT';
   deliveryStatus: string;
   deliveryNote?: string;
   deliveryTime?: string;
 }
 
 export interface CreateCustomDemoRequest {
-  demoImage: string;
+  demoImage?: string;
+  demoImageFile?: File;
+  demoImageFiles?: File[];
+  demoImages?: string[];
   demoDescription?: string;
+}
+
+export interface VerifyRemainingPaymentRequest {
+  received: boolean;
+  note?: string;
 }
 
 function toBackendEnum(value?: string): string | undefined {
@@ -55,12 +68,48 @@ export function updateAdminCustomOrderStatus(orderId: number, payload: UpdateCus
   });
 }
 
+export function verifyCustomOrderDeposit(orderId: number, accepted: boolean) {
+  return apiRequest<{ orderId: number; orderCode: string; status: string }>(
+    `/api/admin/orders/custom/${orderId}/verify-deposit`,
+    { method: 'PATCH', body: { accepted } },
+  );
+}
+
 export function evaluateCustomOrderFlowerInput(orderId: number, payload: EvaluateFlowerInputRequest) {
   return apiRequest<{ orderId: number; flowerEvaluationStatus: string; nextStep: string }>(
     `/api/admin/orders/custom/${orderId}/evaluate-flower-input`,
     {
       method: 'PATCH',
-      body: payload,
+      body: {
+        ...payload,
+        evaluationStatus: toBackendEnum(payload.evaluationStatus),
+      },
+    }
+  );
+}
+
+export function confirmReceivedFlower(orderId: number, payload: ConfirmReceivedFlowerRequest) {
+  const formData = new FormData();
+  formData.append('receivedFlowerImageFile', payload.receivedFlowerImageFile);
+  if (payload.note) formData.append('note', payload.note);
+  return apiRequest<{ orderId: number; orderCode: string; status: string }>(
+    `/api/admin/orders/custom/${orderId}/confirm-received-flower`,
+    {
+      method: 'PATCH',
+      body: formData,
+    }
+  );
+}
+
+export function evaluateReceivedFlower(orderId: number, payload: EvaluateFlowerInputRequest) {
+  return apiRequest<{ orderId: number; flowerEvaluationStatus: string; nextStep: string }>(
+    `/api/admin/orders/custom/${orderId}/evaluate-received-flower`,
+    {
+      method: 'PATCH',
+      body: {
+        ...payload,
+        evaluationStatus: toBackendEnum(payload.evaluationStatus),
+      },
     }
   );
 }
@@ -82,8 +131,35 @@ export function updateAdminCustomOrderDelivery(orderId: number, payload: UpdateC
 }
 
 export function uploadAdminCustomOrderDemo(orderId: number, payload: CreateCustomDemoRequest) {
+  const formData = new FormData();
+  if (payload.demoImage) formData.append('demoImage', payload.demoImage);
+  if (payload.demoImageFile) formData.append('demoImageFile', payload.demoImageFile);
+  if (payload.demoImageFiles && payload.demoImageFiles.length > 0) {
+    payload.demoImageFiles.forEach(file => formData.append('demoImageFiles', file));
+  }
+  if (payload.demoImages && payload.demoImages.length > 0) {
+    payload.demoImages.forEach(image => formData.append('demoImages', image));
+  }
+  if (payload.demoDescription) formData.append('demoDescription', payload.demoDescription);
+
   return apiRequest<CustomDemoResponse>(`/api/admin/orders/custom/${orderId}/demos`, {
     method: 'POST',
-    body: payload,
+    body: formData,
   });
+}
+
+export function confirmCustomOrderRefund(orderId: number) {
+  return apiRequest<{ orderId: number; orderCode: string; status: string }>(`/api/admin/orders/custom/${orderId}/confirm-refund`, {
+    method: 'PATCH',
+  });
+}
+
+export function verifyCustomOrderRemainingPayment(orderId: number, payload: VerifyRemainingPaymentRequest) {
+  return apiRequest<{ orderId: number; orderCode: string; status: string }>(
+    `/api/admin/orders/custom/${orderId}/verify-remaining-payment`,
+    {
+      method: 'PATCH',
+      body: payload,
+    },
+  );
 }

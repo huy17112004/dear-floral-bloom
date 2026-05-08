@@ -1,4 +1,4 @@
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ArrowLeft, ShoppingBag } from 'lucide-react';
@@ -9,9 +9,11 @@ import { productApi } from '@/api';
 import { mapProduct } from '@/api/mappers';
 import type { Product } from '@/types';
 import { toast } from 'sonner';
+import { addProductToCart } from '@/lib/cart';
 
 export default function ProductDetailPage() {
   const { id } = useParams();
+  const navigate = useNavigate();
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
   const [quantity, setQuantity] = useState(1);
@@ -38,6 +40,12 @@ export default function ProductDetailPage() {
     void load();
   }, [id]);
 
+  const handleAddToCart = () => {
+    if (!product) return;
+    addProductToCart(product, quantity);
+    toast.success('Đã thêm vào giỏ hàng');
+  };
+
   if (loading) {
     return (
       <div className="container py-16 text-center">
@@ -62,12 +70,10 @@ export default function ProductDetailPage() {
       </Link>
 
       <div className="grid gap-8 lg:grid-cols-2">
-        {/* Image */}
         <div className="overflow-hidden rounded-2xl bg-secondary aspect-square">
           <img src={product.imageUrl} alt={product.name} className="h-full w-full object-cover" />
         </div>
 
-        {/* Info */}
         <div className="flex flex-col justify-center">
           <Badge variant="secondary" className="mb-3 w-fit text-xs uppercase tracking-wider">
             {product.flowerType || product.material}
@@ -95,11 +101,18 @@ export default function ProductDetailPage() {
                 className="mt-1 w-24"
               />
             </div>
-            <Link to={`/account/orders/create?product=${product.id}&qty=${quantity}`}>
-              <Button size="lg" className="w-full gap-2 rounded-full md:w-auto md:px-12">
-                <ShoppingBag className="h-4 w-4" /> Đặt hàng ngay
+            <div className="flex flex-col gap-3 sm:flex-row">
+              <Button size="lg" variant="outline" className="w-full rounded-full sm:w-auto sm:px-8" onClick={handleAddToCart}>
+                Thêm vào giỏ
               </Button>
-            </Link>
+              <Button
+                size="lg"
+                className="w-full gap-2 rounded-full sm:w-auto sm:px-12"
+                  onClick={() => navigate('/account/cart')}
+              >
+                <ShoppingBag className="h-4 w-4" /> Đến giỏ hàng
+              </Button>
+            </div>
           </div>
         </div>
       </div>

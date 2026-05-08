@@ -134,13 +134,13 @@ export const mockCustomOrders: CustomOrder[] = [
     depositPaymentMethod: 'bank_transfer', depositPaidAt: '2024-02-20',
     flowerType: 'Hoa hồng', personalizationContent: 'Tranh kỷ niệm ngày cưới, thêm chữ "Forever & Always"',
     requestedDeliveryDate: '2024-03-20', flowerInputImageUrl: '/placeholder.svg',
-    flowerEvaluationStatus: 'approved', demoRevisionCount: 1,
+    flowerEvaluationStatus: 'pass', demoRevisionCount: 1,
     orderedAt: '2024-02-20',
     demos: [
       {
         id: 'demo-1', customOrderId: 'co-1', versionNo: 1,
         demoImageUrl: '/placeholder.svg', demoDescription: 'Demo lần 1 - layout cơ bản',
-        customerResponseStatus: 'revision_requested', customerFeedback: 'Muốn thay đổi vị trí chữ sang góc phải',
+        customerResponseStatus: 'request_revision', customerFeedback: 'Muốn thay đổi vị trí chữ sang góc phải',
         uploadedBy: 'user-2', uploadedAt: '2024-03-01', respondedAt: '2024-03-02',
       },
       {
@@ -158,7 +158,7 @@ export const mockCustomOrders: CustomOrder[] = [
     depositPaymentMethod: 'momo', depositPaidAt: '2024-03-01',
     flowerType: 'Hoa cúc + Hoa baby', personalizationContent: 'Tranh tặng sinh nhật mẹ',
     requestedDeliveryDate: '2024-04-01', flowerInputImageUrl: '/placeholder.svg',
-    flowerEvaluationStatus: 'approved', demoRevisionCount: 0,
+    flowerEvaluationStatus: 'pass', demoRevisionCount: 0,
     orderedAt: '2024-03-01',
   },
 ];

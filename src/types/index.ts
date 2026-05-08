@@ -6,24 +6,41 @@ export type ProductKind = 'standard_product' | 'frame_option';
 
 export type ProductStatus = 'active' | 'inactive';
 
-export type AvailableOrderStatus = 'received' | 'processing' | 'shipping' | 'completed' | 'canceled';
-
-export type CustomOrderStatus =
-  | 'deposited'
-  | 'waiting_flower_review'
-  | 'in_progress'
-  | 'waiting_demo_feedback'
-  | 'waiting_remaining_payment'
+export type AvailableOrderStatus =
+  | 'received'
+  | 'processing'
+  | 'shipping'
+  | 'waiting_refund_info'
+  | 'waiting_refund'
+  | 'refunded'
   | 'completed'
   | 'canceled';
 
-export type PaymentStatus = 'unpaid' | 'paid' | 'partial' | 'refunded';
+export type CustomOrderStatus =
+  | 'pending_deposit'
+  | 'pending_deposit_verification'
+  | 'deposited'
+  | 'waiting_flower_review'
+  | 'waiting_flower_receipt'
+  | 'waiting_received_flower_review'
+  | 'in_progress'
+  | 'waiting_demo_feedback'
+  | 'waiting_remaining_payment'
+  | 'waiting_remaining_payment_verification'
+  | 'delivering'
+  | 'waiting_refund_info'
+  | 'waiting_refund'
+  | 'refunded'
+  | 'completed'
+  | 'canceled';
+
+export type PaymentStatus = 'unpaid' | 'pending' | 'paid' | 'partial' | 'refunded';
 
 export type PaymentMethod = 'bank_transfer' | 'cash' | 'momo' | 'zalo_pay';
 
-export type DemoResponseStatus = 'pending' | 'approved' | 'revision_requested';
+export type DemoResponseStatus = 'pending' | 'approve' | 'request_revision';
 
-export type FlowerEvaluationStatus = 'pending' | 'approved' | 'rejected';
+export type FlowerEvaluationStatus = 'pending' | 'pass' | 'fail';
 
 export type DeliveryStatus = 'pending' | 'shipped' | 'delivered' | 'failed';
 
@@ -121,12 +138,16 @@ export interface AvailableOrder {
   transactionRef?: string;
   paymentProofUrl?: string;
   paidAt?: string;
+  refundBankName?: string;
+  refundAccountNumber?: string;
+  refundAccountName?: string;
   totalAmount: number;
   items?: AvailableOrderItem[];
   orderedAt: string;
   completedAt?: string;
   canceledAt?: string;
   note?: string;
+  rejectionReason?: string;
 }
 
 export interface AvailableOrderItem {
@@ -168,6 +189,13 @@ export interface CustomOrder {
   flowerInputImageUrl?: string;
   flowerEvaluationStatus: FlowerEvaluationStatus;
   flowerEvaluationNote?: string;
+  receivedFlowerImageUrl?: string;
+  receivedFlowerEvaluationStatus?: FlowerEvaluationStatus;
+  receivedFlowerEvaluationNote?: string;
+  rejectionReason?: string;
+  refundBankName?: string;
+  refundAccountNumber?: string;
+  refundAccountName?: string;
   demoRevisionCount: number;
   extraRevisionFeeRate?: number;
   demos?: CustomDemo[];
@@ -182,6 +210,7 @@ export interface CustomDemo {
   customOrderId: string;
   versionNo: number;
   demoImageUrl: string;
+  demoImages?: string[];
   demoDescription?: string;
   customerResponseStatus: DemoResponseStatus;
   customerFeedback?: string;

@@ -1,8 +1,10 @@
-import type { CustomerAddress, CustomOrder, Product, ProductCategory } from '@/types';
+import type { AvailableOrder, CustomerAddress, CustomOrder, Product, ProductCategory } from '@/types';
+import type { AvailableOrderResponse } from '@/api/availableOrderApi';
 import type { AddressResponse } from '@/api/meApi';
 import type { CategoryResponse } from '@/api/categoryApi';
 import type { CustomOrderResponse } from '@/api/customOrderApi';
 import type { ProductResponse } from '@/api/productApi';
+import { resolveImageUrl } from '@/lib/image';
 
 function toLowerSnake(value?: string): string {
   return (value ?? '').toLowerCase();
@@ -23,8 +25,9 @@ export function mapProduct(response: ProductResponse): Product {
 
   return {
     id: String(response.productId),
-    categoryId: String(response.categoryId),
+    categoryId: response.categoryId != null ? String(response.categoryId) : '',
     category: response.categoryName
+      && response.categoryId != null
       ? {
           id: String(response.categoryId),
           name: response.categoryName,
@@ -38,7 +41,7 @@ export function mapProduct(response: ProductResponse): Product {
     productKind,
     isSellableDirectly: !!response.isSellableDirectly,
     isCustomSelectable: !!response.isCustomSelectable,
-    imageUrl: response.imageUrl || '/placeholder.svg',
+    imageUrl: resolveImageUrl(response.imageUrl),
     size: response.size ?? undefined,
     material: response.material ?? undefined,
     flowerType: response.flowerType ?? undefined,
@@ -66,11 +69,37 @@ export function mapAddress(response: AddressResponse): CustomerAddress {
 }
 
 export function mapCustomOrder(response: CustomOrderResponse): CustomOrder {
+  const paymentStatusRaw = toLowerSnake(response.paymentStatus);
+  const paymentStatus: CustomOrder['paymentStatus'] = paymentStatusRaw === 'paid'
+    ? 'paid'
+    : paymentStatusRaw === 'pending'
+      ? 'pending'
+    : paymentStatusRaw === 'partially_paid'
+      ? 'partial'
+      : paymentStatusRaw === 'refunded'
+        ? 'refunded'
+        : 'unpaid';
+
   return {
     id: String(response.id),
     orderCode: response.orderCode,
     customerUserId: '',
     shippingAddressId: '',
+    shippingAddress: response.shippingReceiverName
+      ? {
+          id: '',
+          customerUserId: '',
+          receiverName: response.shippingReceiverName,
+          receiverPhone: response.shippingReceiverPhone ?? '',
+          addressLine: response.shippingAddressLine ?? '',
+          ward: response.shippingWard ?? '',
+          district: response.shippingDistrict ?? '',
+          province: response.shippingProvince ?? '',
+          isDefault: false,
+          createdAt: '',
+          updatedAt: '',
+        }
+      : undefined,
     selectedFrameProductId: String(response.selectedFrameProductId),
     selectedFrame: response.selectedFrameName
       ? {
@@ -90,19 +119,91 @@ export function mapCustomOrder(response: CustomOrderResponse): CustomOrder {
         }
       : undefined,
     orderStatus: toLowerSnake(response.orderStatus) as CustomOrder['orderStatus'],
-    paymentStatus: toLowerSnake(response.paymentStatus) as CustomOrder['paymentStatus'],
+    paymentStatus,
     depositAmount: Number(response.depositAmount ?? 0),
     remainingAmount: Number(response.remainingAmount ?? 0),
     totalAmount: Number(response.totalAmount ?? 0),
     flowerType: response.flowerType,
     personalizationContent: response.personalizationContent ?? '',
     requestedDeliveryDate: response.requestedDeliveryDate,
-    flowerInputImageUrl: response.flowerInputImageUrl,
+    flowerInputImageUrl: response.flowerInputImageUrl ? resolveImageUrl(response.flowerInputImageUrl) : undefined,
     flowerEvaluationStatus: toLowerSnake(response.flowerEvaluationStatus) as CustomOrder['flowerEvaluationStatus'],
     flowerEvaluationNote: response.flowerEvaluationNote ?? undefined,
+    receivedFlowerImageUrl: response.receivedFlowerImageUrl ? resolveImageUrl(response.receivedFlowerImageUrl) : undefined,
+    receivedFlowerEvaluationStatus: toLowerSnake(response.receivedFlowerEvaluationStatus) as CustomOrder['receivedFlowerEvaluationStatus'],
+    receivedFlowerEvaluationNote: response.receivedFlowerEvaluationNote ?? undefined,
+    rejectionReason: response.rejectionReason ?? undefined,
+    refundBankName: response.refundBankName ?? undefined,
+    refundAccountNumber: response.refundAccountNumber ?? undefined,
+    refundAccountName: response.refundAccountName ?? undefined,
     demoRevisionCount: response.demoRevisionCount ?? 0,
     extraRevisionFeeRate: response.extraRevisionFeeRate ?? undefined,
     orderedAt: response.orderedAt ?? '',
   };
 }
 
+export function mapAvailableOrder(response: AvailableOrderResponse): AvailableOrder {
+  const paymentStatusRaw = toLowerSnake(response.paymentStatus);
+  const paymentStatus: AvailableOrder['paymentStatus'] = paymentStatusRaw === 'paid'
+    ? 'paid'
+    : paymentStatusRaw === 'pending'
+      ? 'pending'
+    : paymentStatusRaw === 'partially_paid'
+      ? 'partial'
+      : paymentStatusRaw === 'refunded'
+        ? 'refunded'
+        : 'unpaid';
+
+  return {
+    id: String(response.orderId),
+    orderCode: response.orderCode,
+    customerUserId: '',
+    shippingAddressId: '',
+    shippingAddress: response.shippingReceiverName
+      ? {
+          id: '',
+          customerUserId: '',
+          receiverName: response.shippingReceiverName,
+          receiverPhone: response.shippingReceiverPhone ?? '',
+          addressLine: response.shippingAddressLine ?? '',
+          ward: response.shippingWard ?? '',
+          district: response.shippingDistrict ?? '',
+          province: response.shippingProvince ?? '',
+          isDefault: false,
+          createdAt: '',
+          updatedAt: '',
+        }
+      : undefined,
+    orderStatus: toLowerSnake(response.orderStatus) as AvailableOrder['orderStatus'],
+    paymentStatus,
+    totalAmount: Number(response.totalAmount ?? 0),
+    items: (response.items ?? []).map((item, index) => ({
+      id: `${response.orderId}-${index}`,
+      availableOrderId: String(response.orderId),
+      productId: String(item.productId),
+      quantity: item.quantity,
+      unitPrice: Number(item.unitPrice ?? 0),
+      subtotal: Number(item.subtotal ?? 0),
+      product: {
+        id: String(item.productId),
+        categoryId: '',
+        name: item.productName,
+        slug: '',
+        description: '',
+        price: Number(item.unitPrice ?? 0),
+        productKind: 'standard_product',
+        isSellableDirectly: true,
+        isCustomSelectable: false,
+        imageUrl: '/placeholder.svg',
+        status: 'active',
+        createdAt: '',
+        updatedAt: '',
+      },
+    })),
+    orderedAt: response.orderedAt ?? '',
+    rejectionReason: response.rejectionReason,
+    refundBankName: response.refundBankName ?? undefined,
+    refundAccountNumber: response.refundAccountNumber ?? undefined,
+    refundAccountName: response.refundAccountName ?? undefined,
+  };
+}

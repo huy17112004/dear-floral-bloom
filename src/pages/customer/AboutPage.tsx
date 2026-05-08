@@ -32,8 +32,7 @@ export default function AboutPage() {
             <div className="rounded-2xl bg-surface-warm p-6 text-center">
               <Flower2 className="mx-auto mb-3 h-8 w-8 text-primary" />
               <h3 className="font-heading text-lg font-semibold text-heading">Giá trị</h3>
-              <p className="mt-2 text-sm">Dear Floral tạo ra giá trị tinh thần bền vững qua các sản phẩm thủ công mang dấu ấn cá nhân.
-              </p>
+              <p className="mt-2 text-sm">Dear Floral tạo ra giá trị tinh thần bền vững qua các sản phẩm thủ công mang dấu ấn cá nhân.</p>
             </div>
           </div>
         </div>
