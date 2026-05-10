@@ -31,6 +31,7 @@ const customOrderLabels: Record<CustomOrderStatus, { label: string; className: s
   waiting_demo_feedback: { label: 'Chờ duyệt demo', className: 'bg-purple-100 text-purple-800 border-purple-200' },
   waiting_remaining_payment: { label: 'Chờ thanh toán', className: 'bg-orange-100 text-orange-800 border-orange-200' },
   waiting_remaining_payment_verification: { label: 'Chờ xác nhận thanh toán', className: 'bg-cyan-100 text-cyan-800 border-cyan-200' },
+  preparing_delivery: { label: 'Đang chuẩn bị hàng', className: 'bg-amber-100 text-amber-800 border-amber-200' },
   delivering: { label: 'Đang giao hàng', className: 'bg-blue-100 text-blue-800 border-blue-200' },
   waiting_refund_info: { label: 'Chờ thông tin hoàn tiền', className: 'bg-rose-100 text-rose-800 border-rose-200' },
   waiting_refund: { label: 'Chờ hoàn tiền', className: 'bg-red-100 text-red-800 border-red-200' },

@@ -18,6 +18,7 @@ const STEPS: Step[] = [
   { key: 'waiting_demo_feedback', label: 'Duyệt demo', description: 'Bạn xem và phản hồi bản demo', icon: ImageIcon },
   { key: 'waiting_remaining_payment', label: 'Thanh toán còn lại', description: 'Hoàn tất khoản thanh toán', icon: Wallet },
   { key: 'waiting_remaining_payment_verification', label: 'Chờ xác nhận tiền', description: 'Cửa hàng kiểm tra giao dịch', icon: Wallet },
+  { key: 'preparing_delivery', label: 'Chuẩn bị hàng', description: 'Đơn đang được chuẩn bị trước khi giao', icon: PackageCheck },
   { key: 'delivering', label: 'Đang giao hàng', description: 'Đơn hàng đang được vận chuyển', icon: PackageCheck },
   { key: 'completed', label: 'Hoàn thành', description: 'Sản phẩm sẵn sàng giao đến bạn', icon: PackageCheck },
 ];

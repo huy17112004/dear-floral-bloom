@@ -132,6 +132,14 @@ export default function AdminCustomOrders() {
     await loadOrders();
   };
 
+  const handleConfirmPreparedDelivery = async (orderId: string) => {
+    await adminCustomOrderApi.updateAdminCustomOrderStatus(Number(orderId), {
+      status: 'delivering',
+    });
+    toast.success('Đơn đã chuyển sang trạng thái đang giao hàng');
+    await loadOrders();
+  };
+
   const handleConfirmDelivered = async (orderId: string) => {
     await adminCustomOrderApi.updateAdminCustomOrderDelivery(Number(orderId), {
       deliveryType: 'SHIP_OUTPUT',
@@ -164,6 +172,7 @@ export default function AdminCustomOrders() {
                 <SelectItem value="waiting_demo_feedback">Chờ duyệt demo</SelectItem>
                 <SelectItem value="waiting_remaining_payment">Chờ thanh toán</SelectItem>
                 <SelectItem value="waiting_remaining_payment_verification">Chờ xác nhận tiền</SelectItem>
+                <SelectItem value="preparing_delivery">Đang chuẩn bị hàng</SelectItem>
                 <SelectItem value="delivering">Đang giao hàng</SelectItem>
                 <SelectItem value="waiting_refund_info">Chờ thông tin hoàn tiền</SelectItem>
                 <SelectItem value="waiting_refund">Chờ hoàn tiền</SelectItem>
@@ -328,6 +337,16 @@ export default function AdminCustomOrders() {
                                 <Button className="flex-1" onClick={() => void handleVerifyRemaining(o.id, true)}>Đã nhận được</Button>
                                 <Button variant="outline" className="flex-1" onClick={() => void handleVerifyRemaining(o.id, false)}>Chưa nhận được</Button>
                               </div>
+                            </div>
+                          )}
+                          {o.orderStatus === 'preparing_delivery' && (
+                            <div className="space-y-2 rounded-xl border p-3">
+                              <p className="text-sm text-caption">
+                                Trạng thái trung gian: Đang chuẩn bị hàng. Xác nhận xử lý xong đơn để chuyển sang đang giao hàng.
+                              </p>
+                              <Button className="w-full" onClick={() => void handleConfirmPreparedDelivery(o.id)}>
+                                Xác nhận đã xử lý xong đơn
+                              </Button>
                             </div>
                           )}
                           {o.orderStatus === 'delivering' && (

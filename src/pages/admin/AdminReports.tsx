@@ -10,6 +10,30 @@ import { toast } from 'sonner';
 
 const MONEY = (value: number) => `${Math.round(value).toLocaleString('vi-VN')} ₫`;
 
+function escapeHtmlCell(value: string | number) {
+  return String(value)
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#39;');
+}
+
+function exportExcelFromRows(filename: string, headers: string[], rows: Array<Array<string | number>>) {
+  const tableHeader = headers.map(h => `<th>${escapeHtmlCell(h)}</th>`).join('');
+  const tableRows = rows.map(row => `<tr>${row.map(cell => `<td>${escapeHtmlCell(cell)}</td>`).join('')}</tr>`).join('');
+  const html = `<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel"><head><meta charset="UTF-8" /></head><body><table><thead><tr>${tableHeader}</tr></thead><tbody>${tableRows}</tbody></table></body></html>`;
+  const blob = new Blob([`\uFEFF${html}`], { type: 'application/vnd.ms-excel;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const anchor = document.createElement('a');
+  anchor.href = url;
+  anchor.download = `${filename}.xls`;
+  document.body.appendChild(anchor);
+  anchor.click();
+  document.body.removeChild(anchor);
+  URL.revokeObjectURL(url);
+}
+
 export default function AdminReports() {
   const [fromDate, setFromDate] = useState('');
   const [toDate, setToDate] = useState('');
@@ -86,6 +110,48 @@ export default function AdminReports() {
     return [...map.entries()].sort((a, b) => b[1] - a[1]);
   }, [orderStats]);
 
+  const exportInventoryReport = () => {
+    const rows = [
+      ['Tổng mã sản phẩm', inventoryItems.length],
+      ['Tổng tồn kho', inventoryTotalQty],
+      ['Mã SP tồn thấp (<=5)', lowStockItems.length],
+      ...lowStockItems.map(item => [`SP thấp: ${item.productName}`, Number(item.quantityOnHand ?? 0)]),
+    ];
+    exportExcelFromRows('bao-cao-ton-kho', ['Chỉ số', 'Giá trị'], rows);
+  };
+
+  const exportRevenueReport = () => {
+    const rows: Array<Array<string | number>> = [
+      ['Tổng kết', Number(availableRevenue), Number(customRevenue), Number(totalRevenue)],
+      ...revenueItems.map(item => [
+        item.bucketDate || '',
+        Number(item.availableRevenue ?? 0),
+        Number(item.customRevenue ?? 0),
+        Number(item.totalRevenue ?? 0),
+      ]),
+    ];
+    exportExcelFromRows('bao-cao-doanh-thu', ['Kỳ', 'Doanh thu đơn thường', 'Doanh thu đơn custom', 'Doanh thu tổng'], rows);
+  };
+
+  const exportProfitReport = () => {
+    const rows = [
+      ['Giá vốn nhập hàng', importCost],
+      ['Lợi nhuận gộp', grossProfit],
+      ['Biên lợi nhuận gộp (%)', grossMargin.toFixed(1)],
+    ];
+    exportExcelFromRows('bao-cao-loi-nhuan', ['Chỉ số', 'Giá trị'], rows);
+  };
+
+  const exportOrderReport = () => {
+    const totalOrders = orderSummary.reduce((s, [, v]) => s + v, 0);
+    const rows = [
+      ['Tổng bản ghi trạng thái', orderStats.length],
+      ['Tổng số đơn theo thống kê', totalOrders],
+      ...orderSummary.map(([status, total]) => [status, total]),
+    ];
+    exportExcelFromRows('bao-cao-don-hang', ['Trạng thái/Chỉ số', 'Giá trị'], rows);
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
@@ -115,10 +181,13 @@ export default function AdminReports() {
         </TabsList>
 
         <TabsContent value="inventory" className="space-y-4">
+          <div className="flex justify-end">
+            <Button variant="outline" onClick={exportInventoryReport}>Xuất Excel</Button>
+          </div>
           <div className="grid gap-4 md:grid-cols-3">
-            <Card><CardHeader><CardTitle className="text-base">Tổng SKU</CardTitle></CardHeader><CardContent className="text-2xl font-semibold">{inventoryItems.length}</CardContent></Card>
+            <Card><CardHeader><CardTitle className="text-base">Tổng mã sản phẩm</CardTitle></CardHeader><CardContent className="text-2xl font-semibold">{inventoryItems.length}</CardContent></Card>
             <Card><CardHeader><CardTitle className="text-base">Tổng tồn kho</CardTitle></CardHeader><CardContent className="text-2xl font-semibold">{inventoryTotalQty}</CardContent></Card>
-            <Card><CardHeader><CardTitle className="text-base">SKU tồn thấp (≤5)</CardTitle></CardHeader><CardContent className="text-2xl font-semibold">{lowStockItems.length}</CardContent></Card>
+            <Card><CardHeader><CardTitle className="text-base">Mã SP tồn thấp (≤5)</CardTitle></CardHeader><CardContent className="text-2xl font-semibold">{lowStockItems.length}</CardContent></Card>
           </div>
           <Card>
             <CardHeader><CardTitle className="text-base">Danh sách tồn kho thấp</CardTitle></CardHeader>
@@ -135,6 +204,9 @@ export default function AdminReports() {
         </TabsContent>
 
         <TabsContent value="revenue" className="space-y-4">
+          <div className="flex justify-end">
+            <Button variant="outline" onClick={exportRevenueReport}>Xuất Excel</Button>
+          </div>
           <div className="grid gap-4 md:grid-cols-3">
             <Card><CardHeader><CardTitle className="text-base">Doanh thu tổng</CardTitle></CardHeader><CardContent className="text-2xl font-semibold">{MONEY(totalRevenue)}</CardContent></Card>
             <Card><CardHeader><CardTitle className="text-base">Doanh thu đơn thường</CardTitle></CardHeader><CardContent className="text-2xl font-semibold">{MONEY(availableRevenue)}</CardContent></Card>
@@ -157,6 +229,9 @@ export default function AdminReports() {
         </TabsContent>
 
         <TabsContent value="profit" className="space-y-4">
+          <div className="flex justify-end">
+            <Button variant="outline" onClick={exportProfitReport}>Xuất Excel</Button>
+          </div>
           <div className="grid gap-4 md:grid-cols-3">
             <Card><CardHeader><CardTitle className="text-base">Giá vốn nhập hàng</CardTitle></CardHeader><CardContent className="text-2xl font-semibold">{MONEY(importCost)}</CardContent></Card>
             <Card><CardHeader><CardTitle className="text-base">Lợi nhuận gộp</CardTitle></CardHeader><CardContent className="text-2xl font-semibold">{MONEY(grossProfit)}</CardContent></Card>
@@ -172,6 +247,9 @@ export default function AdminReports() {
         </TabsContent>
 
         <TabsContent value="orders" className="space-y-4">
+          <div className="flex justify-end">
+            <Button variant="outline" onClick={exportOrderReport}>Xuất Excel</Button>
+          </div>
           <div className="grid gap-4 md:grid-cols-2">
             <Card><CardHeader><CardTitle className="text-base">Tổng bản ghi trạng thái</CardTitle></CardHeader><CardContent className="text-2xl font-semibold">{orderStats.length}</CardContent></Card>
             <Card><CardHeader><CardTitle className="text-base">Tổng số đơn theo thống kê</CardTitle></CardHeader><CardContent className="text-2xl font-semibold">{orderSummary.reduce((s, [, v]) => s + v, 0)}</CardContent></Card>
