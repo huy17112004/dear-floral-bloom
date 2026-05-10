@@ -14,10 +14,20 @@ import { toast } from 'sonner';
 import { resolveImageUrl } from '@/lib/image';
 
 const BANK_INFO = {
-  bankName: 'Vietcombank',
-  accountNumber: '1234567890',
-  accountHolder: 'NGUYEN VAN A',
+  bankName: 'MBBANK',
+  accountNumber: '08663333326',
+  accountHolder: 'HA HUYEN PHUONG',
 };
+
+function buildVietQrUrl(amount: number, transferContent: string) {
+  const base = `https://img.vietqr.io/image/MB-${BANK_INFO.accountNumber}-compact2.png`;
+  const params = new URLSearchParams({
+    amount: String(Math.max(0, Math.round(amount))),
+    addInfo: transferContent,
+    accountName: BANK_INFO.accountHolder,
+  });
+  return `${base}?${params.toString()}`;
+}
 
 const FLOWER_DELIVERY_GUIDE = {
   recipient: 'Dear Floral',
@@ -167,7 +177,7 @@ export default function CustomOrderDetailPage() {
                   <div className="grid gap-4 sm:grid-cols-2">
                     <div className="flex flex-col items-center gap-2">
                       <QrCode className="h-5 w-5 text-primary" />
-                      <img src={`https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=${encodeURIComponent(`${BANK_INFO.bankName}|${BANK_INFO.accountNumber}|${order.depositAmount}|${order.orderCode}`)}`} alt="QR chuyển khoản" className="h-40 w-40 rounded-lg border" />
+                      <img src={buildVietQrUrl(order.depositAmount, order.orderCode)} alt="QR chuyển khoản" className="h-40 w-40 rounded-lg border" />
                     </div>
                     <div className="space-y-2 text-sm">
                       <div className="flex justify-between"><span className="text-caption">Ngân hàng</span><span className="font-medium">{BANK_INFO.bankName}</span></div>
@@ -346,7 +356,7 @@ export default function CustomOrderDetailPage() {
               <div className="grid gap-4 sm:grid-cols-2 mb-4">
                 <div className="flex flex-col items-center gap-2">
                   <QrCode className="h-5 w-5 text-primary" />
-                  <img src={`https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=${encodeURIComponent(`${BANK_INFO.bankName}|${BANK_INFO.accountNumber}|${order.remainingAmount}|${order.orderCode}`)}`} alt="QR chuyển khoản" className="h-40 w-40 rounded-lg border" />
+                  <img src={buildVietQrUrl(order.remainingAmount, order.orderCode)} alt="QR chuyển khoản" className="h-40 w-40 rounded-lg border" />
                 </div>
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between"><span className="text-caption">Ngân hàng</span><span className="font-medium">{BANK_INFO.bankName}</span></div>

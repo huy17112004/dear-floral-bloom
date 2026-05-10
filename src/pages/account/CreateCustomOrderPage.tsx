@@ -15,10 +15,20 @@ import { toast } from 'sonner';
 
 // ─── Bank info (hardcoded – update manually later) ────────────────────────────
 const BANK_INFO = {
-  bankName: 'Vietcombank',
-  accountNumber: '1234567890',
-  accountHolder: 'NGUYEN VAN A',
+  bankName: 'MBBANK',
+  accountNumber: '08663333326',
+  accountHolder: 'HA HUYEN PHUONG',
 };
+
+function buildVietQrUrl(amount: number, transferContent: string) {
+  const base = `https://img.vietqr.io/image/MB-${BANK_INFO.accountNumber}-compact2.png`;
+  const params = new URLSearchParams({
+    amount: String(Math.max(0, Math.round(amount))),
+    addInfo: transferContent,
+    accountName: BANK_INFO.accountHolder,
+  });
+  return `${base}?${params.toString()}`;
+}
 
 // ─── QR Payment Screen ────────────────────────────────────────────────────────
 function DepositPaymentScreen({
@@ -35,8 +45,7 @@ function DepositPaymentScreen({
   const [confirming, setConfirming] = useState(false);
   const navigate = useNavigate();
 
-  const qrContent = `${BANK_INFO.bankName}|${BANK_INFO.accountNumber}|${depositAmount}|${orderCode}`;
-  const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(qrContent)}`;
+  const qrUrl = buildVietQrUrl(depositAmount, orderCode);
 
   const handleConfirm = async () => {
     try {

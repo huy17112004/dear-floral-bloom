@@ -12,10 +12,20 @@ import { AvailableOrderProgress } from '@/components/shared/AvailableOrderProgre
 import { Input } from '@/components/ui/input';
 
 const BANK_INFO = {
-  bankName: 'Vietcombank',
-  accountNumber: '1234567890',
-  accountHolder: 'NGUYEN VAN A',
+  bankName: 'MBBANK',
+  accountNumber: '08663333326',
+  accountHolder: 'HA HUYEN PHUONG',
 };
+
+function buildVietQrUrl(amount: number, transferContent: string) {
+  const base = `https://img.vietqr.io/image/MB-${BANK_INFO.accountNumber}-compact2.png`;
+  const params = new URLSearchParams({
+    amount: String(Math.max(0, Math.round(amount))),
+    addInfo: transferContent,
+    accountName: BANK_INFO.accountHolder,
+  });
+  return `${base}?${params.toString()}`;
+}
 
 export default function AvailableOrderDetailPage() {
   const { id } = useParams();
@@ -119,7 +129,7 @@ export default function AvailableOrderDetailPage() {
                     <div className="flex flex-col items-center gap-2">
                       <QrCode className="h-5 w-5 text-primary" />
                       <img
-                        src={`https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=${encodeURIComponent(`${BANK_INFO.bankName}|${BANK_INFO.accountNumber}|${order.totalAmount}|${order.orderCode}`)}`}
+                        src={buildVietQrUrl(order.totalAmount, order.orderCode)}
                         alt="QR chuyển khoản"
                         className="h-40 w-40 rounded-lg border"
                       />
