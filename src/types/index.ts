@@ -21,6 +21,7 @@ export type CustomOrderStatus =
   | 'pending_deposit_verification'
   | 'deposited'
   | 'waiting_flower_review'
+  | 'waiting_flower_preparation'
   | 'waiting_flower_receipt'
   | 'waiting_received_flower_review'
   | 'in_progress'
@@ -141,6 +142,8 @@ export interface AvailableOrder {
   refundBankName?: string;
   refundAccountNumber?: string;
   refundAccountName?: string;
+  shippingCarrier?: string;
+  shippingTrackingCode?: string;
   totalAmount: number;
   items?: AvailableOrderItem[];
   orderedAt: string;
@@ -189,6 +192,10 @@ export interface CustomOrder {
   flowerInputImageUrl?: string;
   flowerEvaluationStatus: FlowerEvaluationStatus;
   flowerEvaluationNote?: string;
+  flowerShippingCarrier?: string;
+  flowerShippingTrackingCode?: string;
+  shippingCarrier?: string;
+  shippingTrackingCode?: string;
   receivedFlowerImageUrl?: string;
   receivedFlowerEvaluationStatus?: FlowerEvaluationStatus;
   receivedFlowerEvaluationNote?: string;

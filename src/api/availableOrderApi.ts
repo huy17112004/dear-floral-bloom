@@ -27,6 +27,8 @@ export interface AvailableOrderResponse {
   refundBankName?: string;
   refundAccountNumber?: string;
   refundAccountName?: string;
+  shippingCarrier?: string;
+  shippingTrackingCode?: string;
 }
 
 export interface CreateAvailableOrderItemRequest {
@@ -70,6 +72,11 @@ export interface SubmitAvailableOrderRefundInfoRequest {
   refundBankName: string;
   refundAccountNumber: string;
   refundAccountName: string;
+}
+
+export interface SubmitAvailableOrderShippingInfoRequest {
+  shippingCarrier: string;
+  shippingTrackingCode: string;
 }
 
 function toBackendEnum(value?: string): string | undefined {
@@ -136,5 +143,18 @@ export function submitAvailableOrderRefundInfo(orderId: number, payload: SubmitA
 export function confirmAvailableOrderRefund(orderId: number) {
   return apiRequest<{ orderId: number; orderCode: string; status: string }>(`/api/admin/orders/available/${orderId}/confirm-refund`, {
     method: 'PATCH',
+  });
+}
+
+export function submitAvailableOrderShippingInfo(orderId: number, payload: SubmitAvailableOrderShippingInfoRequest) {
+  return apiRequest<{ orderId: number; orderCode: string; status: string }>(`/api/admin/orders/available/${orderId}/submit-shipping`, {
+    method: 'PATCH',
+    body: payload,
+  });
+}
+
+export function confirmAvailableOrderReceived(orderId: number) {
+  return apiRequest<{ orderId: number; orderCode: string; status: string }>(`/api/orders/available/${orderId}/confirm-received`, {
+    method: 'POST',
   });
 }

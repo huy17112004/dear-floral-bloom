@@ -24,6 +24,8 @@ export default function AdminCustomOrders() {
   const [demoDesc, setDemoDesc] = useState<Record<string, string>>({});
   const [verifyNote, setVerifyNote] = useState<Record<string, string>>({});
   const [receivedFlowerFiles, setReceivedFlowerFiles] = useState<Record<string, File | null>>({});
+  const [deliveryCarrier, setDeliveryCarrier] = useState<Record<string, string>>({});
+  const [deliveryTrackingCode, setDeliveryTrackingCode] = useState<Record<string, string>>({});
   const [demosByOrder, setDemosByOrder] = useState<Record<string, CustomDemo[]>>({});
 
   const loadOrders = async () => {
@@ -132,20 +134,18 @@ export default function AdminCustomOrders() {
     await loadOrders();
   };
 
-  const handleConfirmPreparedDelivery = async (orderId: string) => {
-    await adminCustomOrderApi.updateAdminCustomOrderStatus(Number(orderId), {
-      status: 'delivering',
+  const handleSubmitDeliveryShipping = async (orderId: string) => {
+    const shippingCarrier = (deliveryCarrier[orderId] || '').trim();
+    const shippingTrackingCode = (deliveryTrackingCode[orderId] || '').trim();
+    if (!shippingCarrier || !shippingTrackingCode) {
+      toast.error('Vui lòng nhập đơn vị vận chuyển và mã vận đơn');
+      return;
+    }
+    await adminCustomOrderApi.submitCustomOrderShippingInfo(Number(orderId), {
+      shippingCarrier,
+      shippingTrackingCode,
     });
-    toast.success('Đơn đã chuyển sang trạng thái đang giao hàng');
-    await loadOrders();
-  };
-
-  const handleConfirmDelivered = async (orderId: string) => {
-    await adminCustomOrderApi.updateAdminCustomOrderDelivery(Number(orderId), {
-      deliveryType: 'SHIP_OUTPUT',
-      deliveryStatus: 'DELIVERED',
-    });
-    toast.success('Đã xác nhận giao hàng thành công');
+    toast.success('Đã gửi thông tin vận chuyển, đơn chuyển sang đang giao hàng');
     await loadOrders();
   };
 
@@ -166,7 +166,8 @@ export default function AdminCustomOrders() {
                 <SelectItem value="pending_deposit">Chờ đặt cọc</SelectItem>
                 <SelectItem value="pending_deposit_verification">Đang xác nhận cọc</SelectItem>
                 <SelectItem value="waiting_flower_review">Chờ đánh giá hoa</SelectItem>
-                <SelectItem value="waiting_flower_receipt">Chờ nhận hoa từ khách</SelectItem>
+                <SelectItem value="waiting_flower_preparation">Khách hàng chuẩn bị hoa</SelectItem>
+                <SelectItem value="waiting_flower_receipt">Đang vận chuyển hoa từ khách</SelectItem>
                 <SelectItem value="waiting_received_flower_review">Chờ đánh giá hoa thực tế</SelectItem>
                 <SelectItem value="in_progress">Đang thực hiện</SelectItem>
                 <SelectItem value="waiting_demo_feedback">Chờ duyệt demo</SelectItem>
@@ -284,11 +285,30 @@ export default function AdminCustomOrders() {
                               </div>
                             </div>
                           )}
+                          {o.orderStatus === 'waiting_flower_preparation' && (
+                            <div className="space-y-2 rounded-xl border p-3">
+                              <p className="text-sm text-caption">
+                                Khách hàng đang chuẩn bị hoa và tạo vận đơn để gửi đến cửa hàng.
+                              </p>
+                            </div>
+                          )}
                           {o.orderStatus === 'waiting_flower_receipt' && (
                             <div className="space-y-2 rounded-xl border p-3">
                               <p className="text-sm text-caption">
-                                Đơn đã qua bước đánh giá ảnh hoa. Chờ khách gửi hoa thật đến cửa hàng.
+                                Hoa đang trên đường vận chuyển từ khách đến cửa hàng.
                               </p>
+                              {(o.flowerShippingCarrier || o.flowerShippingTrackingCode) && (
+                                <div className="rounded-lg border bg-surface-warm p-3 space-y-2 text-xs">
+                                  <div className="flex justify-between">
+                                    <span className="text-caption">Đơn vị vận chuyển</span>
+                                    <span className="font-medium">{o.flowerShippingCarrier || '—'}</span>
+                                  </div>
+                                  <div className="flex justify-between">
+                                    <span className="text-caption">Mã vận đơn</span>
+                                    <span className="font-mono font-semibold">{o.flowerShippingTrackingCode || '—'}</span>
+                                  </div>
+                                </div>
+                              )}
                               <Input
                                 type="file"
                                 accept="image/*"
@@ -342,10 +362,22 @@ export default function AdminCustomOrders() {
                           {o.orderStatus === 'preparing_delivery' && (
                             <div className="space-y-2 rounded-xl border p-3">
                               <p className="text-sm text-caption">
-                                Trạng thái trung gian: Đang chuẩn bị hàng. Xác nhận xử lý xong đơn để chuyển sang đang giao hàng.
+                                Nhập thông tin vận chuyển để chuyển đơn sang trạng thái đang giao hàng.
                               </p>
-                              <Button className="w-full" onClick={() => void handleConfirmPreparedDelivery(o.id)}>
-                                Xác nhận đã xử lý xong đơn
+                              <div className="grid gap-2 sm:grid-cols-2">
+                                <Input
+                                  placeholder="Đơn vị vận chuyển"
+                                  value={deliveryCarrier[o.id] || ''}
+                                  onChange={e => setDeliveryCarrier(prev => ({ ...prev, [o.id]: e.target.value }))}
+                                />
+                                <Input
+                                  placeholder="Mã vận đơn"
+                                  value={deliveryTrackingCode[o.id] || ''}
+                                  onChange={e => setDeliveryTrackingCode(prev => ({ ...prev, [o.id]: e.target.value }))}
+                                />
+                              </div>
+                              <Button className="w-full" onClick={() => void handleSubmitDeliveryShipping(o.id)}>
+                                Gửi thông tin vận chuyển
                               </Button>
                             </div>
                           )}
@@ -357,7 +389,15 @@ export default function AdminCustomOrders() {
                                 <br />
                                 {[o.shippingAddress?.addressLine, o.shippingAddress?.ward, o.shippingAddress?.district, o.shippingAddress?.province].filter(Boolean).join(', ')}
                               </p>
-                              <Button className="w-full" onClick={() => void handleConfirmDelivered(o.id)}>Xác nhận đã giao hàng</Button>
+                              {(o.shippingCarrier || o.shippingTrackingCode) && (
+                                <div className="rounded-lg border bg-surface-warm p-3 space-y-1 text-xs">
+                                  <p><span className="text-caption">Đơn vị vận chuyển:</span> {o.shippingCarrier || '—'}</p>
+                                  <p><span className="text-caption">Mã vận đơn:</span> {o.shippingTrackingCode || '—'}</p>
+                                </div>
+                              )}
+                              <p className="text-xs text-caption">
+                                Đơn sẽ hoàn thành khi khách xác nhận đã nhận hàng hoặc hệ thống tự hoàn thành sau 5 phút.
+                              </p>
                             </div>
                           )}
                         </div>

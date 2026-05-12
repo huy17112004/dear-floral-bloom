@@ -45,6 +45,9 @@ export default function CustomOrderDetailPage() {
   const [refundBankName, setRefundBankName] = useState('');
   const [refundAccountNumber, setRefundAccountNumber] = useState('');
   const [refundAccountName, setRefundAccountName] = useState('');
+  const [shippingCarrier, setShippingCarrier] = useState('');
+  const [shippingTrackingCode, setShippingTrackingCode] = useState('');
+  const [submittingFlowerShipping, setSubmittingFlowerShipping] = useState(false);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const [previewZoom, setPreviewZoom] = useState(1);
 
@@ -145,6 +148,38 @@ export default function CustomOrderDetailPage() {
     }
   };
 
+  const handleSubmitFlowerShipping = async () => {
+    if (!id) return;
+    if (!shippingCarrier.trim() || !shippingTrackingCode.trim()) {
+      toast.error('Vui lòng nhập đơn vị vận chuyển và mã vận đơn');
+      return;
+    }
+    try {
+      setSubmittingFlowerShipping(true);
+      await customOrderApi.submitFlowerShippingInfo(Number(id), {
+        carrier: shippingCarrier.trim(),
+        trackingCode: shippingTrackingCode.trim(),
+      });
+      toast.success('Đã gửi thông tin vận chuyển hoa');
+      void loadOrder();
+    } catch {
+      toast.error('Không thể gửi thông tin vận chuyển hoa');
+    } finally {
+      setSubmittingFlowerShipping(false);
+    }
+  };
+
+  const handleConfirmReceived = async () => {
+    if (!id) return;
+    try {
+      await customOrderApi.confirmCustomOrderReceived(Number(id));
+      toast.success('Đã xác nhận nhận được hàng');
+      void loadOrder();
+    } catch {
+      toast.error('Không thể xác nhận nhận hàng');
+    }
+  };
+
   if (!order) return <div className="container py-16 text-center text-caption">Đơn hàng không tồn tại.</div>;
 
   return (
@@ -201,7 +236,7 @@ export default function CustomOrderDetailPage() {
           </Card>
         )}
 
-        {order.orderStatus === 'waiting_flower_receipt' && (
+        {order.orderStatus === 'waiting_flower_preparation' && (
           <Card className="border-teal-300">
             <CardHeader>
               <CardTitle className="font-heading text-base text-teal-700">Hướng dẫn gửi hoa đến Dear Floral</CardTitle>
@@ -227,7 +262,50 @@ export default function CustomOrderDetailPage() {
                 </ul>
               </div>
               <p className="text-caption">
-                Sau khi cửa hàng xác nhận đã nhận hoa, đơn sẽ chuyển sang bước <strong>Đánh giá hoa thực tế</strong>.
+                Sau khi tạo vận đơn, đơn sẽ chuyển sang bước <strong>Đang vận chuyển hoa từ khách</strong>.
+              </p>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <Input
+                  placeholder="Đơn vị vận chuyển"
+                  value={shippingCarrier}
+                  onChange={(e) => setShippingCarrier(e.target.value)}
+                />
+                <Input
+                  placeholder="Mã vận đơn"
+                  value={shippingTrackingCode}
+                  onChange={(e) => setShippingTrackingCode(e.target.value)}
+                />
+              </div>
+              <Button className="w-full rounded-full" onClick={() => void handleSubmitFlowerShipping()} disabled={submittingFlowerShipping}>
+                {submittingFlowerShipping ? 'Đang gửi...' : 'Gửi thông tin vận chuyển'}
+              </Button>
+            </CardContent>
+          </Card>
+        )}
+
+        {order.orderStatus === 'waiting_flower_receipt' && (
+          <Card className="border-teal-300">
+            <CardHeader>
+              <CardTitle className="font-heading text-base text-teal-700">Đang vận chuyển hoa từ khách</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3 text-sm">
+              <p className="text-body">
+                Cửa hàng đang chờ nhận kiện hoa thực tế từ đơn vị vận chuyển để tiếp tục quy trình.
+              </p>
+              {(order.flowerShippingCarrier || order.flowerShippingTrackingCode) && (
+                <div className="rounded-lg border bg-surface-warm p-3 space-y-2">
+                  <div className="flex justify-between">
+                    <span className="text-caption">Đơn vị vận chuyển</span>
+                    <span className="font-medium">{order.flowerShippingCarrier || '—'}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-caption">Mã vận đơn</span>
+                    <span className="font-mono font-semibold">{order.flowerShippingTrackingCode || '—'}</span>
+                  </div>
+                </div>
+              )}
+              <p className="text-caption">
+                Khi cửa hàng xác nhận nhận hoa và tải ảnh, đơn sẽ chuyển sang bước <strong>Đánh giá hoa thực tế</strong>.
               </p>
             </CardContent>
           </Card>
@@ -295,6 +373,18 @@ export default function CustomOrderDetailPage() {
                   alt="Ảnh hoa thực tế đã nhận"
                   className="max-h-72 w-full rounded-lg border object-cover"
                 />
+              </div>
+            )}
+            {(order.shippingCarrier || order.shippingTrackingCode) && (
+              <div className="pt-2 rounded-lg border bg-surface-warm p-3 space-y-2">
+                <p className="text-caption">Thông tin vận chuyển thành phẩm</p>
+                <div className="flex justify-between"><span className="text-caption">Đơn vị vận chuyển</span><span className="font-medium">{order.shippingCarrier || '—'}</span></div>
+                <div className="flex justify-between"><span className="text-caption">Mã vận đơn</span><span className="font-mono font-semibold">{order.shippingTrackingCode || '—'}</span></div>
+                {order.orderStatus === 'delivering' && (
+                  <Button className="w-full rounded-full" onClick={() => void handleConfirmReceived()}>
+                    Đã nhận được hàng
+                  </Button>
+                )}
               </div>
             )}
           </CardContent>

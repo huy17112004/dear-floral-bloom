@@ -45,6 +45,11 @@ export interface VerifyRemainingPaymentRequest {
   note?: string;
 }
 
+export interface SubmitCustomOrderShippingInfoRequest {
+  shippingCarrier: string;
+  shippingTrackingCode: string;
+}
+
 function toBackendEnum(value?: string): string | undefined {
   return value ? value.toUpperCase() : undefined;
 }
@@ -157,6 +162,16 @@ export function confirmCustomOrderRefund(orderId: number) {
 export function verifyCustomOrderRemainingPayment(orderId: number, payload: VerifyRemainingPaymentRequest) {
   return apiRequest<{ orderId: number; orderCode: string; status: string }>(
     `/api/admin/orders/custom/${orderId}/verify-remaining-payment`,
+    {
+      method: 'PATCH',
+      body: payload,
+    },
+  );
+}
+
+export function submitCustomOrderShippingInfo(orderId: number, payload: SubmitCustomOrderShippingInfoRequest) {
+  return apiRequest<{ orderId: number; orderCode: string; status: string }>(
+    `/api/admin/orders/custom/${orderId}/submit-shipping`,
     {
       method: 'PATCH',
       body: payload,

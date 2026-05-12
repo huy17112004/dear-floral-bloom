@@ -20,6 +20,8 @@ export default function AdminAvailableOrders() {
   const [loading, setLoading] = useState(true);
   const [rejectionReasons, setRejectionReasons] = useState<Record<string, string>>({});
   const [verifyNotes, setVerifyNotes] = useState<Record<string, string>>({});
+  const [shippingCarrier, setShippingCarrier] = useState<Record<string, string>>({});
+  const [shippingTrackingCode, setShippingTrackingCode] = useState<Record<string, string>>({});
   const [loadingActions, setLoadingActions] = useState<Record<string, boolean>>({});
 
   const loadOrders = async () => {
@@ -94,18 +96,19 @@ export default function AdminAvailableOrders() {
   };
 
   const handleMoveToShipping = async (orderId: string) => {
+    const carrier = (shippingCarrier[orderId] || '').trim();
+    const trackingCode = (shippingTrackingCode[orderId] || '').trim();
+    if (!carrier || !trackingCode) {
+      toast.error('Vui lòng nhập đơn vị vận chuyển và mã vận đơn');
+      return;
+    }
     await runAction(
       orderId,
-      () => availableOrderApi.updateAdminAvailableOrderStatus(Number(orderId), { status: 'shipping' }).then(() => undefined),
+      () => availableOrderApi.submitAvailableOrderShippingInfo(Number(orderId), {
+        shippingCarrier: carrier,
+        shippingTrackingCode: trackingCode,
+      }).then(() => undefined),
       'Đã chuyển sang đang vận chuyển'
-    );
-  };
-
-  const handleCompleteOrder = async (orderId: string) => {
-    await runAction(
-      orderId,
-      () => availableOrderApi.updateAdminAvailableOrderStatus(Number(orderId), { status: 'completed' }).then(() => undefined),
-      'Đã hoàn thành đơn hàng'
     );
   };
 
@@ -247,8 +250,20 @@ export default function AdminAvailableOrders() {
                           {o.orderStatus === 'processing' && (
                             <div className="space-y-2 rounded-xl border border-blue-200 bg-blue-50 p-4">
                               <p className="text-sm font-medium text-heading">Hành động yêu cầu</p>
+                              <div className="grid gap-2 sm:grid-cols-2">
+                                <Input
+                                  placeholder="Đơn vị vận chuyển"
+                                  value={shippingCarrier[o.id] || ''}
+                                  onChange={e => setShippingCarrier(prev => ({ ...prev, [o.id]: e.target.value }))}
+                                />
+                                <Input
+                                  placeholder="Mã vận đơn"
+                                  value={shippingTrackingCode[o.id] || ''}
+                                  onChange={e => setShippingTrackingCode(prev => ({ ...prev, [o.id]: e.target.value }))}
+                                />
+                              </div>
                               <Button className="w-full rounded-full bg-blue-600 hover:bg-blue-700" disabled={loadingActions[o.id]} onClick={() => void handleMoveToShipping(o.id)}>
-                                Chuyển sang vận chuyển
+                                Gửi thông tin và chuyển vận chuyển
                               </Button>
                             </div>
                           )}
@@ -265,9 +280,15 @@ export default function AdminAvailableOrders() {
                               ) : (
                                 <p className="text-sm text-caption">Không có thông tin địa chỉ</p>
                               )}
-                              <Button className="w-full rounded-full bg-purple-600 hover:bg-purple-700 mt-3" disabled={loadingActions[o.id]} onClick={() => void handleCompleteOrder(o.id)}>
-                                Xác nhận hoàn thành
-                              </Button>
+                              {(o.shippingCarrier || o.shippingTrackingCode) && (
+                                <div className="rounded-lg border bg-surface-warm p-3 text-sm space-y-1">
+                                  <p><span className="font-medium">Đơn vị vận chuyển:</span> {o.shippingCarrier || '—'}</p>
+                                  <p><span className="font-medium">Mã vận đơn:</span> {o.shippingTrackingCode || '—'}</p>
+                                </div>
+                              )}
+                              <p className="text-xs text-caption">
+                                Đơn sẽ hoàn thành khi khách xác nhận đã nhận hàng hoặc hệ thống tự hoàn thành sau 5 phút.
+                              </p>
                             </div>
                           )}
 
@@ -292,4 +313,3 @@ export default function AdminAvailableOrders() {
     </div>
   );
 }
-

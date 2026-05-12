@@ -12,7 +12,8 @@ interface Step {
 const STEPS: Step[] = [
   { key: 'deposited', label: 'Đặt cọc', description: 'Đơn hàng đã được tiếp nhận', icon: Coins },
   { key: 'waiting_flower_review', label: 'Đánh giá hoa', description: 'Tiệm kiểm tra hoa đầu vào qua ảnh', icon: Leaf },
-  { key: 'waiting_flower_receipt', label: 'Nhận hoa từ khách', description: 'Khách hàng gửi hoa đến Dear Floral', icon: PackageCheck },
+  { key: 'waiting_flower_preparation', label: 'Khách chuẩn bị hoa', description: 'Khách đóng gói và tạo vận đơn gửi hoa', icon: PackageCheck },
+  { key: 'waiting_flower_receipt', label: 'Vận chuyển hoa từ khách', description: 'Hoa đang được vận chuyển đến Dear Floral', icon: PackageCheck },
   { key: 'waiting_received_flower_review', label: 'Đánh giá hoa thực tế', description: 'Tiệm đánh giá hoa thực tế sau khi đã nhận', icon: Leaf },
   { key: 'in_progress', label: 'Đang thực hiện', description: 'Nghệ nhân ép và dựng khung', icon: Sparkles },
   { key: 'waiting_demo_feedback', label: 'Duyệt demo', description: 'Bạn xem và phản hồi bản demo', icon: ImageIcon },
@@ -40,6 +41,7 @@ export function CustomOrderProgress({ currentStatus, className }: Props) {
   const statusMapping: Record<CustomOrderStatus, CustomOrderStatus> = {
     pending_deposit: 'deposited',
     pending_deposit_verification: 'deposited',
+    waiting_flower_preparation: 'waiting_flower_preparation',
     waiting_refund_info: 'deposited',
     waiting_refund: 'deposited',
     waiting_flower_receipt: 'waiting_flower_receipt',
@@ -127,6 +129,7 @@ export function getCustomOrderStepLabel(status: CustomOrderStatus): { current: n
   const statusMapping: Record<CustomOrderStatus, CustomOrderStatus> = {
     pending_deposit: 'deposited',
     pending_deposit_verification: 'deposited',
+    waiting_flower_preparation: 'waiting_flower_preparation',
     waiting_refund_info: 'deposited',
     waiting_refund: 'deposited',
     waiting_flower_receipt: 'waiting_flower_receipt',

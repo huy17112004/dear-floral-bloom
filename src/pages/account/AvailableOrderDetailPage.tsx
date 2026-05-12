@@ -90,6 +90,18 @@ export default function AvailableOrderDetailPage() {
     }
   };
 
+  const handleConfirmReceived = async () => {
+    if (!id) return;
+    try {
+      await availableOrderApi.confirmAvailableOrderReceived(Number(id));
+      toast.success('Đã xác nhận nhận được hàng');
+      await loadOrder();
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Không thể xác nhận nhận hàng';
+      toast.error(message);
+    }
+  };
+
   if (loading) {
     return <div className="container py-16 text-center text-caption">Đang tải dữ liệu...</div>;
   }
@@ -176,6 +188,21 @@ export default function AvailableOrderDetailPage() {
               <div className="flex justify-between"><span className="text-caption">Ngân hàng</span><span className="font-medium">{order.refundBankName || '—'}</span></div>
               <div className="flex justify-between"><span className="text-caption">Số tài khoản</span><span className="font-medium">{order.refundAccountNumber || '—'}</span></div>
               <div className="flex justify-between"><span className="text-caption">Chủ tài khoản</span><span className="font-medium">{order.refundAccountName || '—'}</span></div>
+            </CardContent>
+          </Card>
+        )}
+
+        {(order.shippingCarrier || order.shippingTrackingCode) && (
+          <Card>
+            <CardHeader><CardTitle className="font-heading text-base">Thông tin vận chuyển</CardTitle></CardHeader>
+            <CardContent className="space-y-2 text-sm">
+              <div className="flex justify-between"><span className="text-caption">Đơn vị vận chuyển</span><span className="font-medium">{order.shippingCarrier || '—'}</span></div>
+              <div className="flex justify-between"><span className="text-caption">Mã vận đơn</span><span className="font-mono font-semibold">{order.shippingTrackingCode || '—'}</span></div>
+              {order.orderStatus === 'shipping' && (
+                <Button className="mt-2 w-full rounded-full" onClick={() => void handleConfirmReceived()}>
+                  Đã nhận được hàng
+                </Button>
+              )}
             </CardContent>
           </Card>
         )}

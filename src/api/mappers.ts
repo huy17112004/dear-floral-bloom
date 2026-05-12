@@ -129,9 +129,13 @@ export function mapCustomOrder(response: CustomOrderResponse): CustomOrder {
     flowerInputImageUrl: response.flowerInputImageUrl ? resolveImageUrl(response.flowerInputImageUrl) : undefined,
     flowerEvaluationStatus: toLowerSnake(response.flowerEvaluationStatus) as CustomOrder['flowerEvaluationStatus'],
     flowerEvaluationNote: response.flowerEvaluationNote ?? undefined,
+    flowerShippingCarrier: response.flowerShippingCarrier ?? undefined,
+    flowerShippingTrackingCode: response.flowerShippingTrackingCode ?? undefined,
     receivedFlowerImageUrl: response.receivedFlowerImageUrl ? resolveImageUrl(response.receivedFlowerImageUrl) : undefined,
     receivedFlowerEvaluationStatus: toLowerSnake(response.receivedFlowerEvaluationStatus) as CustomOrder['receivedFlowerEvaluationStatus'],
     receivedFlowerEvaluationNote: response.receivedFlowerEvaluationNote ?? undefined,
+    shippingCarrier: response.shippingCarrier ?? undefined,
+    shippingTrackingCode: response.shippingTrackingCode ?? undefined,
     rejectionReason: response.rejectionReason ?? undefined,
     refundBankName: response.refundBankName ?? undefined,
     refundAccountNumber: response.refundAccountNumber ?? undefined,
@@ -205,5 +209,7 @@ export function mapAvailableOrder(response: AvailableOrderResponse): AvailableOr
     refundBankName: response.refundBankName ?? undefined,
     refundAccountNumber: response.refundAccountNumber ?? undefined,
     refundAccountName: response.refundAccountName ?? undefined,
+    shippingCarrier: response.shippingCarrier ?? undefined,
+    shippingTrackingCode: response.shippingTrackingCode ?? undefined,
   };
 }

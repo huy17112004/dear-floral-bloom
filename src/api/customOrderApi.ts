@@ -22,9 +22,13 @@ export interface CustomOrderResponse {
   flowerInputImageUrl?: string;
   flowerEvaluationStatus?: string;
   flowerEvaluationNote?: string;
+  flowerShippingCarrier?: string;
+  flowerShippingTrackingCode?: string;
   receivedFlowerImageUrl?: string;
   receivedFlowerEvaluationStatus?: string;
   receivedFlowerEvaluationNote?: string;
+  shippingCarrier?: string;
+  shippingTrackingCode?: string;
   rejectionReason?: string;
   refundBankName?: string;
   refundAccountNumber?: string;
@@ -103,6 +107,11 @@ export interface SubmitRefundInfoRequest {
   refundAccountName: string;
 }
 
+export interface SubmitFlowerShippingInfoRequest {
+  carrier: string;
+  trackingCode: string;
+}
+
 export function createCustomOrder(payload: CreateCustomOrderRequest) {
   return apiRequest<CreateCustomOrderResponse>('/api/orders/custom', {
     method: 'POST',
@@ -159,5 +168,18 @@ export function submitCustomOrderRefundInfo(orderId: number, payload: SubmitRefu
   return apiRequest<{ orderId: number; orderCode: string; status: string }>(`/api/orders/custom/${orderId}/refund-info`, {
     method: 'POST',
     body: payload,
+  });
+}
+
+export function submitFlowerShippingInfo(orderId: number, payload: SubmitFlowerShippingInfoRequest) {
+  return apiRequest<{ orderId: number; orderCode: string; status: string }>(`/api/orders/custom/${orderId}/flower-shipping`, {
+    method: 'POST',
+    body: payload,
+  });
+}
+
+export function confirmCustomOrderReceived(orderId: number) {
+  return apiRequest<{ orderId: number; orderCode: string; status: string }>(`/api/orders/custom/${orderId}/confirm-received`, {
+    method: 'POST',
   });
 }
