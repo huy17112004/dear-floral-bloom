@@ -16,6 +16,7 @@ import { toast } from 'sonner';
 export default function AdminAvailableOrders() {
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<AvailableOrderStatus | 'all'>('all');
+  const [sortOption, setSortOption] = useState('newest');
   const [orders, setOrders] = useState<AvailableOrder[]>([]);
   const [loading, setLoading] = useState(true);
   const [rejectionReasons, setRejectionReasons] = useState<Record<string, string>>({});
@@ -47,8 +48,23 @@ export default function AdminAvailableOrders() {
   }, [statusFilter]);
 
   const filtered = useMemo(
-    () => orders.filter(o => !search || o.orderCode.toLowerCase().includes(search.toLowerCase())),
-    [orders, search]
+    () => orders
+      .filter(o => !search || o.orderCode.toLowerCase().includes(search.toLowerCase()))
+      .sort((a, b) => {
+        switch (sortOption) {
+          case 'newest':
+            return new Date(b.orderedAt).getTime() - new Date(a.orderedAt).getTime();
+          case 'oldest':
+            return new Date(a.orderedAt).getTime() - new Date(b.orderedAt).getTime();
+          case 'price_asc':
+            return a.totalAmount - b.totalAmount;
+          case 'price_desc':
+            return b.totalAmount - a.totalAmount;
+          default:
+            return 0;
+        }
+      }),
+    [orders, search, sortOption]
   );
 
   const runAction = async (orderId: string, handler: () => Promise<void>, successMessage: string) => {
@@ -143,6 +159,15 @@ export default function AdminAvailableOrders() {
                 <SelectItem value="refunded">Đã hoàn tiền</SelectItem>
                 <SelectItem value="completed">Hoàn thành</SelectItem>
                 <SelectItem value="canceled">Đã hủy</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={sortOption} onValueChange={setSortOption}>
+              <SelectTrigger className="w-56"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="newest">Mới nhất</SelectItem>
+                <SelectItem value="oldest">Cũ nhất</SelectItem>
+                <SelectItem value="price_asc">Giá tăng dần</SelectItem>
+                <SelectItem value="price_desc">Giá giảm dần</SelectItem>
               </SelectContent>
             </Select>
           </div>

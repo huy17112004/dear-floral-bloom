@@ -57,7 +57,7 @@ const initialProductForm: ProductFormState = {
 };
 
 function productKindLabel(kind: ProductKind): string {
-  return kind === 'standard_product' ? 'Sản phẩm thường' : 'Khung tranh';
+  return kind === 'standard_product' ? 'Sản phẩm thường' : 'Custom';
 }
 
 export default function AdminProductList() {

@@ -37,6 +37,8 @@ const initialForm = {
 
 export default function AdminUserList() {
   const [search, setSearch] = useState('');
+  const [roleFilter, setRoleFilter] = useState<'all' | AdminUserRow['role']>('all');
+  const [sortOption, setSortOption] = useState('newest');
   const [users, setUsers] = useState<AdminUserRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [openCreate, setOpenCreate] = useState(false);
@@ -68,8 +70,27 @@ export default function AdminUserList() {
   }, []);
 
   const filtered = useMemo(
-    () => users.filter(u => !search || u.fullName.toLowerCase().includes(search.toLowerCase()) || u.email.includes(search)),
-    [users, search]
+    () => users
+      .filter(u => {
+        const matchSearch = !search || u.fullName.toLowerCase().includes(search.toLowerCase()) || u.email.includes(search);
+        const matchRole = roleFilter === 'all' || u.role === roleFilter;
+        return matchSearch && matchRole;
+      })
+      .sort((a, b) => {
+        switch (sortOption) {
+          case 'newest':
+            return b.id - a.id;
+          case 'oldest':
+            return a.id - b.id;
+          case 'name_asc':
+            return a.fullName.localeCompare(b.fullName, 'vi');
+          case 'name_desc':
+            return b.fullName.localeCompare(a.fullName, 'vi');
+          default:
+            return 0;
+        }
+      }),
+    [users, search, roleFilter, sortOption]
   );
 
   const resetForm = () => setForm(initialForm);
@@ -180,9 +201,29 @@ export default function AdminUserList() {
 
       <Card>
         <CardHeader>
-          <div className="relative max-w-sm">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-caption" />
-            <Input placeholder="Tìm kiếm..." value={search} onChange={e => setSearch(e.target.value)} className="pl-10" />
+          <div className="flex flex-col gap-3 md:flex-row md:items-center">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-caption" />
+              <Input placeholder="Tìm kiếm..." value={search} onChange={e => setSearch(e.target.value)} className="pl-10" />
+            </div>
+            <Select value={roleFilter} onValueChange={v => setRoleFilter(v as 'all' | AdminUserRow['role'])}>
+              <SelectTrigger className="w-48"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Tất cả vai trò</SelectItem>
+                <SelectItem value="ADMIN">Admin</SelectItem>
+                <SelectItem value="STAFF">Nhân viên</SelectItem>
+                <SelectItem value="CUSTOMER">Khách hàng</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={sortOption} onValueChange={setSortOption}>
+              <SelectTrigger className="w-48"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="newest">Mới nhất</SelectItem>
+                <SelectItem value="oldest">Cũ nhất</SelectItem>
+                <SelectItem value="name_asc">A - Z</SelectItem>
+                <SelectItem value="name_desc">Z - A</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
         </CardHeader>
         <CardContent>

@@ -17,6 +17,7 @@ import { resolveImageUrl } from '@/lib/image';
 export default function AdminCustomOrders() {
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [sortOption, setSortOption] = useState('newest');
   const [orders, setOrders] = useState<CustomOrder[]>([]);
   const [loadingVerify, setLoadingVerify] = useState<Record<string, boolean>>({});
   const [evalNote, setEvalNote] = useState<Record<string, string>>({});
@@ -37,11 +38,26 @@ export default function AdminCustomOrders() {
     loadOrders().catch(() => toast.error('Không thể tải danh sách đơn custom'));
   }, []);
 
-  const filtered = orders.filter(o => {
-    const matchSearch = !search || o.orderCode.toLowerCase().includes(search.toLowerCase());
-    const matchStatus = statusFilter === 'all' || o.orderStatus === statusFilter;
-    return matchSearch && matchStatus;
-  });
+  const filtered = orders
+    .filter(o => {
+      const matchSearch = !search || o.orderCode.toLowerCase().includes(search.toLowerCase());
+      const matchStatus = statusFilter === 'all' || o.orderStatus === statusFilter;
+      return matchSearch && matchStatus;
+    })
+    .sort((a, b) => {
+      switch (sortOption) {
+        case 'newest':
+          return new Date(b.orderedAt).getTime() - new Date(a.orderedAt).getTime();
+        case 'oldest':
+          return new Date(a.orderedAt).getTime() - new Date(b.orderedAt).getTime();
+        case 'price_asc':
+          return a.totalAmount - b.totalAmount;
+        case 'price_desc':
+          return b.totalAmount - a.totalAmount;
+        default:
+          return 0;
+      }
+    });
 
   const handleVerifyDeposit = async (orderId: string, accepted: boolean) => {
     setLoadingVerify(prev => ({ ...prev, [orderId]: true }));
@@ -182,19 +198,29 @@ export default function AdminCustomOrders() {
                 <SelectItem value="canceled">Đã hủy</SelectItem>
               </SelectContent>
             </Select>
+            <Select value={sortOption} onValueChange={setSortOption}>
+              <SelectTrigger className="w-56"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="newest">Mới nhất</SelectItem>
+                <SelectItem value="oldest">Cũ nhất</SelectItem>
+                <SelectItem value="price_asc">Giá tăng dần</SelectItem>
+                <SelectItem value="price_desc">Giá giảm dần</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
         </CardHeader>
         <CardContent>
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Mã đơn</TableHead><TableHead>Loại hoa</TableHead><TableHead>Khung tranh</TableHead><TableHead>Tổng tiền</TableHead><TableHead>Thanh toán</TableHead><TableHead>Trạng thái</TableHead><TableHead />
+                <TableHead>Mã đơn</TableHead><TableHead>Ngày đặt</TableHead><TableHead>Loại hoa</TableHead><TableHead>Khung tranh</TableHead><TableHead>Tổng tiền</TableHead><TableHead>Thanh toán</TableHead><TableHead>Trạng thái</TableHead><TableHead />
               </TableRow>
             </TableHeader>
             <TableBody>
               {filtered.map(o => (
                 <TableRow key={o.id}>
                   <TableCell className="font-medium text-heading">{o.orderCode}</TableCell>
+                  <TableCell className="text-body">{new Date(o.orderedAt).toLocaleDateString('vi-VN')}</TableCell>
                   <TableCell>{o.flowerType}</TableCell>
                   <TableCell>{o.selectedFrame?.name || '—'}</TableCell>
                   <TableCell>{o.totalAmount.toLocaleString('vi-VN')}₫</TableCell>

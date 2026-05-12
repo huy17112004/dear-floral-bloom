@@ -189,6 +189,30 @@ export default function CreateCustomOrderPage() {
       return;
     }
 
+    if (!requestedDeliveryDate) {
+      toast.error('Vui lòng chọn ngày mong muốn nhận hàng');
+      return;
+    }
+
+    const selectedDate = new Date(requestedDeliveryDate);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    selectedDate.setHours(0, 0, 0, 0);
+    
+    if (selectedDate < today) {
+      toast.error('Ngày mong muốn nhận hàng không thể ở quá khứ. Vui lòng chọn ngày trong tương lai');
+      return;
+    }
+
+    const minDeliveryDate = new Date(today);
+    minDeliveryDate.setDate(minDeliveryDate.getDate() + 25);
+    
+    if (selectedDate < minDeliveryDate) {
+      const daysNeeded = Math.ceil((minDeliveryDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+      toast.error(`Ngày mong muốn nhận hàng phải cách ít nhất ${daysNeeded} ngày tính từ hôm nay. Vui lòng chọn ngày sau ${minDeliveryDate.toLocaleDateString('vi-VN')}`);
+      return;
+    }
+
     if (!flowerInputImageFile) {
       toast.error('Vui lòng tải lên ảnh hoa thực tế');
       return;
@@ -216,7 +240,14 @@ export default function CreateCustomOrderPage() {
         depositAmount,
       });
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Tạo đơn custom thất bại';
+      let message = 'Tạo đơn custom thất bại';
+      if (error instanceof Error) {
+        if (error.message.includes('inventory') || error.message.includes('stock') || error.message.includes('tồn')) {
+          message = 'Khung tranh này hiện không còn hàng. Vui lòng chọn khung tranh khác';
+        } else {
+          message = error.message;
+        }
+      }
       toast.error(message);
     }
   };

@@ -50,7 +50,7 @@ export default function AdminInventory() {
               <SelectContent>
                 <SelectItem value="all">Tất cả</SelectItem>
                 <SelectItem value="standard_product">Sản phẩm thường</SelectItem>
-                <SelectItem value="frame_option">Khung tranh</SelectItem>
+                <SelectItem value="frame_option">Custom</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -75,7 +75,7 @@ export default function AdminInventory() {
                   </TableCell>
                   <TableCell>
                     <Badge variant="secondary" className="text-xs">
-                      {inv.productKind.toLowerCase() === 'standard_product' ? 'Sản phẩm' : 'Khung tranh'}
+                      {inv.productKind.toLowerCase() === 'standard_product' ? 'Sản phẩm' : 'Custom'}
                     </Badge>
                   </TableCell>
                   <TableCell>
