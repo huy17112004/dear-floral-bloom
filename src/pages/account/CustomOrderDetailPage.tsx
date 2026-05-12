@@ -86,13 +86,24 @@ export default function CustomOrderDetailPage() {
     if (demos.length === 0) return '';
     return [...demos].sort((a, b) => b.versionNo - a.versionNo)[0]?.id ?? '';
   }, [demos]);
+  const baseOrderAmount = useMemo(() => Math.max(0, (order?.depositAmount ?? 0) * 2), [order]);
+  const feePerExceededRevision = useMemo(() => Math.round(baseOrderAmount * 0.05), [baseOrderAmount]);
   const extraRevisionFee = useMemo(
-    () => Math.max(0, Number((order?.totalAmount ?? 0) - (order?.depositAmount ?? 0) * 2)),
-    [order]
+    () => feePerExceededRevision * Math.max(0, demos.length - 3),
+    [feePerExceededRevision, demos.length]
   );
 
   const submitFeedback = async (demoId: string, action: 'approve' | 'request_revision') => {
     if (!id) return;
+    
+    if (action === 'request_revision' && demos.length >= 3) {
+      const isExactlyThirdFeedback = demos.length === 3;
+      const message = isExactlyThirdFeedback
+        ? `Bạn đang ở lần duyệt demo thứ 3. Sau lần này, mỗi lần yêu cầu chỉnh sửa sẽ phát sinh thêm ${feePerExceededRevision.toLocaleString('vi-VN')}₫ (5% giá trị đơn ban đầu). Bạn muốn tiếp tục?`
+        : `Yêu cầu chỉnh sửa này sẽ phát sinh thêm ${feePerExceededRevision.toLocaleString('vi-VN')}₫ (5% giá trị đơn ban đầu). Bạn muốn tiếp tục?`;
+      if (!window.confirm(message)) return;
+    }
+    
     try {
       await customOrderApi.feedbackCustomOrderDemo(Number(id), Number(demoId), {
         action,
@@ -396,7 +407,12 @@ export default function CustomOrderDetailPage() {
             <div className="flex justify-between"><span className="text-caption">Đặt cọc</span><span className="text-heading font-medium">{order.depositAmount.toLocaleString('vi-VN')}₫</span></div>
             <div className="flex justify-between"><span className="text-caption">Còn lại</span><span className="text-heading font-medium">{order.remainingAmount.toLocaleString('vi-VN')}₫</span></div>
             {extraRevisionFee > 0 && (
-              <div className="flex justify-between"><span className="text-caption">Phí chỉnh sửa demo vượt mức</span><span className="text-heading font-medium">+{extraRevisionFee.toLocaleString('vi-VN')}₫</span></div>
+              <div className="space-y-1.5 rounded-lg border bg-amber-50 p-3">
+                <p className="text-caption font-medium">Chi tiết phí chỉnh sửa demo vượt mức</p>
+                <div className="flex justify-between text-xs"><span className="text-caption">Số lần chỉnh sửa vượt mức (lần 4+)</span><span className="font-medium">{demos.length - 3} lần</span></div>
+                <div className="flex justify-between text-xs"><span className="text-caption">Mức phí mỗi lần</span><span className="font-medium">5% × {baseOrderAmount.toLocaleString('vi-VN')}₫ = {feePerExceededRevision.toLocaleString('vi-VN')}₫</span></div>
+                <div className="border-t border-amber-200 pt-1 flex justify-between"><span className="text-caption font-medium">Tổng phí vượt mức ({demos.length - 3}×5%)</span><span className="font-semibold text-amber-700">+{extraRevisionFee.toLocaleString('vi-VN')}₫</span></div>
+              </div>
             )}
             <div className="flex justify-between border-t pt-2"><span className="font-medium text-heading">Tổng cộng</span><span className="font-bold text-heading">{order.totalAmount.toLocaleString('vi-VN')}₫</span></div>
             <div className="flex justify-between"><span className="text-caption">Trạng thái</span><StatusBadge type="payment" status={order.paymentStatus} /></div>

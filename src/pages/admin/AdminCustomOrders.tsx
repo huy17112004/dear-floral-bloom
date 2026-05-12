@@ -128,6 +128,15 @@ export default function AdminCustomOrders() {
       toast.error('Vui lòng chọn ít nhất 1 ảnh demo');
       return;
     }
+    
+    // Kiểm tra lần upload thứ 4
+    const currentDemos = demosByOrder[orderId] ?? [];
+    if (currentDemos.length === 3) {
+      toast.info('Lần chỉnh sửa thứ 4 này sẽ được áp dụng mức phí bằng 5% giá trị đơn hàng. Khách hàng sẽ được thông báo.', {
+        duration: 5000,
+      });
+    }
+    
     await adminCustomOrderApi.uploadAdminCustomOrderDemo(Number(orderId), {
       demoImageFiles: files,
       demoDescription: demoDesc[orderId],
@@ -251,8 +260,23 @@ export default function AdminCustomOrders() {
                             <div className="pt-2 border-t space-y-2">
                               <div className="flex justify-between"><span className="text-caption">Đặt cọc</span><span className="font-medium">{o.depositAmount.toLocaleString('vi-VN')}₫</span></div>
                               <div className="flex justify-between"><span className="text-caption">Còn lại</span><span className="font-medium">{o.remainingAmount.toLocaleString('vi-VN')}₫</span></div>
-                              {Math.max(0, o.totalAmount - o.depositAmount * 2) > 0 && (
-                                <div className="flex justify-between"><span className="text-caption">Phí chỉnh sửa demo vượt mức</span><span className="font-medium">+{Math.max(0, o.totalAmount - o.depositAmount * 2).toLocaleString('vi-VN')}₫</span></div>
+                              {Math.max(0, (demosByOrder[o.id]?.length ?? 0) - 3) > 0 && (
+                                <div className="space-y-1.5 rounded-lg border bg-amber-50 p-2">
+                                  {(() => {
+                                    const exceededRevisionCount = Math.max(0, (demosByOrder[o.id]?.length ?? 0) - 3);
+                                    const baseOrderAmount = Math.max(0, o.depositAmount * 2);
+                                    const feePerExceededRevision = Math.round(baseOrderAmount * 0.05);
+                                    const totalExceededRevisionFee = exceededRevisionCount * feePerExceededRevision;
+                                    return (
+                                      <>
+                                  <p className="text-caption font-medium">Chi tiết phí chỉnh sửa demo vượt mức</p>
+                                  <div className="flex justify-between text-xs"><span className="text-caption">Số lần chỉnh sửa vượt mức (lần 4+)</span><span className="font-medium">{exceededRevisionCount} lần</span></div>
+                                  <div className="flex justify-between text-xs"><span className="text-caption">Mức phí mỗi lần</span><span className="font-medium">5% × {baseOrderAmount.toLocaleString('vi-VN')}₫ = {feePerExceededRevision.toLocaleString('vi-VN')}₫</span></div>
+                                  <div className="border-t border-amber-200 pt-1 flex justify-between"><span className="text-caption font-medium">Tổng phí ({exceededRevisionCount}×5%)</span><span className="font-semibold text-amber-700">+{totalExceededRevisionFee.toLocaleString('vi-VN')}₫</span></div>
+                                      </>
+                                    );
+                                  })()}
+                                </div>
                               )}
                               <div className="flex justify-between font-semibold"><span>Tổng cộng</span><span>{o.totalAmount.toLocaleString('vi-VN')}₫</span></div>
                             </div>
