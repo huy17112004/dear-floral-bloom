@@ -126,6 +126,20 @@ export default function AvailableOrderDetailPage() {
       </div>
 
       <div className="space-y-6">
+        <Card>
+          <CardHeader><CardTitle className="font-heading text-base">Thông tin đơn hàng</CardTitle></CardHeader>
+          <CardContent className="space-y-2 text-sm">
+            <div className="flex justify-between"><span className="text-caption">Mã đơn</span><span className="font-medium">{order.orderCode}</span></div>
+            <div className="flex justify-between"><span className="text-caption">Thời gian đặt</span><span className="font-medium">{new Date(order.orderedAt).toLocaleString('vi-VN')}</span></div>
+            <div className="flex justify-between"><span className="text-caption">Người nhận</span><span className="font-medium">{order.shippingAddress?.receiverName || '—'}</span></div>
+            <div className="flex justify-between"><span className="text-caption">Số điện thoại</span><span className="font-medium">{order.shippingAddress?.receiverPhone || '—'}</span></div>
+            <div className="flex justify-between gap-4">
+              <span className="text-caption">Địa chỉ giao hàng</span>
+              <span className="text-right font-medium">{[order.shippingAddress?.addressLine, order.shippingAddress?.ward, order.shippingAddress?.district, order.shippingAddress?.province].filter(Boolean).join(', ') || '—'}</span>
+            </div>
+          </CardContent>
+        </Card>
+
         {order.orderStatus === 'received' && (order.paymentStatus === 'unpaid' || order.paymentStatus === 'pending') && (
           <Card className={order.paymentStatus === 'unpaid' ? 'border-primary' : 'border-sky-300'}>
             <CardHeader>
@@ -215,6 +229,7 @@ export default function AvailableOrderDetailPage() {
                 <div>
                   <span className="font-medium text-heading">{item.product?.name || item.productId}</span>
                   <span className="ml-2 text-sm text-caption">x{item.quantity}</span>
+                  <div className="text-xs text-caption">Đơn giá: {item.unitPrice.toLocaleString('vi-VN')}₫</div>
                 </div>
                 <span className="font-medium text-heading">{item.subtotal.toLocaleString('vi-VN')}₫</span>
               </div>

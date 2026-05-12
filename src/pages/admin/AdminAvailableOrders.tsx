@@ -182,10 +182,21 @@ export default function AdminAvailableOrders() {
                             <StatusBadge type="availableOrder" status={o.orderStatus} />
                             <StatusBadge type="payment" status={o.paymentStatus} />
                           </div>
+                          <div className="rounded-lg border bg-surface-warm p-3 text-sm space-y-1.5">
+                            <p className="font-medium text-heading">Thông tin đơn hàng</p>
+                            <p><span className="text-caption">Mã đơn:</span> {o.orderCode}</p>
+                            <p><span className="text-caption">Thời gian đặt:</span> {new Date(o.orderedAt).toLocaleString('vi-VN')}</p>
+                            <p><span className="text-caption">Người nhận:</span> {o.shippingAddress?.receiverName || '—'}</p>
+                            <p><span className="text-caption">Số điện thoại:</span> {o.shippingAddress?.receiverPhone || '—'}</p>
+                            <p><span className="text-caption">Địa chỉ giao hàng:</span> {[o.shippingAddress?.addressLine, o.shippingAddress?.ward, o.shippingAddress?.district, o.shippingAddress?.province].filter(Boolean).join(', ') || '—'}</p>
+                          </div>
                           <div className="space-y-2">
                             {o.items?.map(item => (
                               <div key={item.id} className="flex justify-between rounded-lg bg-surface-warm p-3 text-sm">
-                                <span>{item.product?.name || item.productId} x{item.quantity}</span>
+                                <span>
+                                  {item.product?.name || item.productId} x{item.quantity}
+                                  <span className="ml-2 text-xs text-caption">(Đơn giá: {item.unitPrice.toLocaleString('vi-VN')}₫)</span>
+                                </span>
                                 <span className="font-medium">{item.subtotal.toLocaleString('vi-VN')}₫</span>
                               </div>
                             ))}
