@@ -480,7 +480,7 @@ export default function AdminProductList() {
               <SelectContent>
                 <SelectItem value="all">Tất cả loại mặt hàng</SelectItem>
                 <SelectItem value="standard_product">Sản phẩm thường</SelectItem>
-                <SelectItem value="frame_option">Khung tranh</SelectItem>
+                <SelectItem value="frame_option">Custom</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -626,7 +626,7 @@ function ProductForm({
           <SelectTrigger><SelectValue /></SelectTrigger>
           <SelectContent>
             <SelectItem value="standard_product">Sản phẩm thường</SelectItem>
-            <SelectItem value="frame_option">Khung tranh</SelectItem>
+            <SelectItem value="frame_option">Custom</SelectItem>
           </SelectContent>
         </Select>
       </div>

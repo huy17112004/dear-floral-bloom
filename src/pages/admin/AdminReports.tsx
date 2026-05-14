@@ -7,6 +7,33 @@ import { reportApi, purchaseReceiptApi } from '@/api';
 import type { InventoryReportItem, OrderStatisticItem, RevenueReportItemResponse } from '@/api/reportApi';
 import type { PurchaseReceiptResponse } from '@/api/purchaseReceiptApi';
 import { toast } from 'sonner';
+const ORDER_STATUS_LABELS: Record<string, string> = {
+  received: 'Đã tiếp nhận',
+  processing: 'Đang xử lý',
+  shipping: 'Đang giao',
+  waiting_refund_info: 'Chờ thông tin hoàn tiền',
+  waiting_refund: 'Chờ hoàn tiền',
+  refunded: 'Đã hoàn tiền',
+  completed: 'Hoàn thành',
+  canceled: 'Đã hủy',
+  pending_deposit: 'Chờ đặt cọc',
+  pending_deposit_verification: 'Đang xác nhận cọc',
+  deposited: 'Đã đặt cọc',
+  waiting_flower_review: 'Chờ đánh giá hoa',
+  waiting_flower_preparation: 'Khách chuẩn bị hoa',
+  waiting_flower_receipt: 'Đang vận chuyển hoa từ khách',
+  waiting_received_flower_review: 'Chờ đánh giá hoa thực tế',
+  in_progress: 'Đang thực hiện',
+  waiting_demo_feedback: 'Chờ duyệt demo',
+  waiting_remaining_payment: 'Chờ thanh toán còn lại',
+  waiting_remaining_payment_verification: 'Chờ xác nhận tiền còn lại',
+  preparing_delivery: 'Đang chuẩn bị hàng',
+  delivering: 'Đang giao hàng',
+};
+
+function getOrderStatusLabel(status: string) {
+  return ORDER_STATUS_LABELS[status.toLowerCase()] ?? status;
+}
 
 const MONEY = (value: number) => `${Math.round(value).toLocaleString('vi-VN')} ₫`;
 
@@ -92,7 +119,7 @@ export default function AdminReports() {
     [inventoryItems]
   );
   const lowStockItems = useMemo(
-    () => [...inventoryItems].filter(i => Number(i.quantityOnHand ?? 0) <= 5).sort((a, b) => a.quantityOnHand - b.quantityOnHand),
+    () => [...inventoryItems].filter(i => Number(i.quantityOnHand ?? 0) <= 3).sort((a, b) => a.quantityOnHand - b.quantityOnHand),
     [inventoryItems]
   );
   const importCost = useMemo(
@@ -114,7 +141,7 @@ export default function AdminReports() {
     const rows = [
       ['Tổng mã sản phẩm', inventoryItems.length],
       ['Tổng tồn kho', inventoryTotalQty],
-      ['Mã SP tồn thấp (<=5)', lowStockItems.length],
+      ['Mã SP tồn thấp (<=3)', lowStockItems.length],
       ...lowStockItems.map(item => [`SP thấp: ${item.productName}`, Number(item.quantityOnHand ?? 0)]),
     ];
     exportExcelFromRows('bao-cao-ton-kho', ['Chỉ số', 'Giá trị'], rows);
@@ -187,7 +214,7 @@ export default function AdminReports() {
           <div className="grid gap-4 md:grid-cols-3">
             <Card><CardHeader><CardTitle className="text-base">Tổng mã sản phẩm</CardTitle></CardHeader><CardContent className="text-2xl font-semibold">{inventoryItems.length}</CardContent></Card>
             <Card><CardHeader><CardTitle className="text-base">Tổng tồn kho</CardTitle></CardHeader><CardContent className="text-2xl font-semibold">{inventoryTotalQty}</CardContent></Card>
-            <Card><CardHeader><CardTitle className="text-base">Mã SP tồn thấp (≤5)</CardTitle></CardHeader><CardContent className="text-2xl font-semibold">{lowStockItems.length}</CardContent></Card>
+            <Card><CardHeader><CardTitle className="text-base">Mã SP tồn thấp (≤3)</CardTitle></CardHeader><CardContent className="text-2xl font-semibold">{lowStockItems.length}</CardContent></Card>
           </div>
           <Card>
             <CardHeader><CardTitle className="text-base">Danh sách tồn kho thấp</CardTitle></CardHeader>
@@ -260,7 +287,7 @@ export default function AdminReports() {
               {orderSummary.length === 0 && <p className="text-sm text-caption">Không có dữ liệu đơn hàng.</p>}
               {orderSummary.map(([status, total]) => (
                 <div key={status} className="flex items-center justify-between rounded border p-2 text-sm">
-                  <span>{status}</span>
+                  <span>{getOrderStatusLabel(status)}</span>
                   <span className="font-semibold">{total}</span>
                 </div>
               ))}
@@ -271,3 +298,4 @@ export default function AdminReports() {
     </div>
   );
 }
+
