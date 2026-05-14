@@ -258,21 +258,27 @@ export default function AdminCustomOrders() {
                               </div>
                             )}
                             <div className="pt-2 border-t space-y-2">
-                              <div className="flex justify-between"><span className="text-caption">Đặt cọc</span><span className="font-medium">{o.depositAmount.toLocaleString('vi-VN')}₫</span></div>
-                              <div className="flex justify-between"><span className="text-caption">Còn lại</span><span className="font-medium">{o.remainingAmount.toLocaleString('vi-VN')}₫</span></div>
+                              <div className="flex justify-between"><span className="text-caption">Đặt cọc</span><span className="font-medium">{o.depositAmount.toLocaleString('vi-VN')}₫ (50%)</span></div>
+                              {!['waiting_remaining_payment_verification', 'preparing_delivery', 'delivering', 'completed', 'waiting_refund_info', 'waiting_refund', 'refunded', 'canceled'].includes(o.orderStatus) && (
+                                <div className="flex justify-between">
+                                  <span className="text-caption">Còn lại</span>
+                                  <span className="font-medium">{o.remainingAmount.toLocaleString('vi-VN')}₫</span>
+                                </div>
+                              )}
                               {Math.max(0, (demosByOrder[o.id]?.length ?? 0) - 3) > 0 && (
                                 <div className="space-y-1.5 rounded-lg border bg-amber-50 p-2">
                                   {(() => {
                                     const exceededRevisionCount = Math.max(0, (demosByOrder[o.id]?.length ?? 0) - 3);
                                     const baseOrderAmount = Math.max(0, o.depositAmount * 2);
-                                    const feePerExceededRevision = Math.round(baseOrderAmount * 0.05);
+                                    const extraRevisionFeeRate = o.extraRevisionFeeRate ?? 0.05;
+                                    const feePerExceededRevision = Math.round(baseOrderAmount * extraRevisionFeeRate);
                                     const totalExceededRevisionFee = exceededRevisionCount * feePerExceededRevision;
                                     return (
                                       <>
                                   <p className="text-caption font-medium">Chi tiết phí chỉnh sửa demo vượt mức</p>
                                   <div className="flex justify-between text-xs"><span className="text-caption">Số lần chỉnh sửa vượt mức (lần 4+)</span><span className="font-medium">{exceededRevisionCount} lần</span></div>
-                                  <div className="flex justify-between text-xs"><span className="text-caption">Mức phí mỗi lần</span><span className="font-medium">5% × {baseOrderAmount.toLocaleString('vi-VN')}₫ = {feePerExceededRevision.toLocaleString('vi-VN')}₫</span></div>
-                                  <div className="border-t border-amber-200 pt-1 flex justify-between"><span className="text-caption font-medium">Tổng phí ({exceededRevisionCount}×5%)</span><span className="font-semibold text-amber-700">+{totalExceededRevisionFee.toLocaleString('vi-VN')}₫</span></div>
+                                  <div className="flex justify-between text-xs"><span className="text-caption">Mức phí mỗi lần</span><span className="font-medium">{Math.round(extraRevisionFeeRate * 100)}% × {baseOrderAmount.toLocaleString('vi-VN')}₫ = {feePerExceededRevision.toLocaleString('vi-VN')}₫</span></div>
+                                  <div className="border-t border-amber-200 pt-1 flex justify-between"><span className="text-caption font-medium">Tổng phí ({exceededRevisionCount}×{Math.round(extraRevisionFeeRate * 100)}%)</span><span className="font-semibold text-amber-700">+{totalExceededRevisionFee.toLocaleString('vi-VN')}₫</span></div>
                                       </>
                                     );
                                   })()}

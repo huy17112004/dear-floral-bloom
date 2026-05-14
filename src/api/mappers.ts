@@ -80,6 +80,25 @@ export function mapCustomOrder(response: CustomOrderResponse): CustomOrder {
         ? 'refunded'
         : 'unpaid';
 
+  const depositAmount = Number(response.depositAmount ?? 0);
+  const remainingAmountRaw = Number(response.remainingAmount ?? 0);
+  const totalAmountRaw = Number(response.totalAmount ?? 0);
+
+  // Backend currently may not fold extra demo revision fee into remaining/total yet.
+  // We normalize amounts here so all screens using mapped custom orders stay consistent.
+  const baseOrderAmount = Math.max(0, depositAmount * 2);
+  const extraRevisionFeeRate = 0.05;
+  const exceededRevisionCount = Math.max(0, Number(response.demoRevisionCount ?? 0) - 3);
+  const extraRevisionFee = Math.round(baseOrderAmount * extraRevisionFeeRate) * exceededRevisionCount;
+  const expectedRemainingWithExtra = depositAmount + extraRevisionFee;
+  const backendAlreadyAppliedExtra = extraRevisionFee > 0 && remainingAmountRaw >= expectedRemainingWithExtra;
+  const normalizedRemainingAmount = backendAlreadyAppliedExtra
+    ? remainingAmountRaw
+    : remainingAmountRaw + extraRevisionFee;
+  const normalizedTotalAmount = backendAlreadyAppliedExtra
+    ? totalAmountRaw
+    : Math.max(totalAmountRaw, depositAmount + normalizedRemainingAmount);
+
   return {
     id: String(response.id),
     orderCode: response.orderCode,
@@ -120,9 +139,9 @@ export function mapCustomOrder(response: CustomOrderResponse): CustomOrder {
       : undefined,
     orderStatus: toLowerSnake(response.orderStatus) as CustomOrder['orderStatus'],
     paymentStatus,
-    depositAmount: Number(response.depositAmount ?? 0),
-    remainingAmount: Number(response.remainingAmount ?? 0),
-    totalAmount: Number(response.totalAmount ?? 0),
+    depositAmount,
+    remainingAmount: normalizedRemainingAmount,
+    totalAmount: normalizedTotalAmount,
     flowerType: response.flowerType,
     personalizationContent: response.personalizationContent ?? '',
     requestedDeliveryDate: response.requestedDeliveryDate,
@@ -141,7 +160,7 @@ export function mapCustomOrder(response: CustomOrderResponse): CustomOrder {
     refundAccountNumber: response.refundAccountNumber ?? undefined,
     refundAccountName: response.refundAccountName ?? undefined,
     demoRevisionCount: response.demoRevisionCount ?? 0,
-    extraRevisionFeeRate: response.extraRevisionFeeRate ?? undefined,
+    extraRevisionFeeRate: 0.05,
     orderedAt: response.orderedAt ?? '',
   };
 }
