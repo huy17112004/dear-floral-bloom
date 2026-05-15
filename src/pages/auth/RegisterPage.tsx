@@ -4,7 +4,6 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Flower2 } from 'lucide-react';
 import { authApi } from '@/api';
 import { toast } from 'sonner';
 
@@ -36,7 +35,7 @@ export default function RegisterPage() {
     <div className="flex min-h-[80vh] items-center justify-center py-12">
       <div className="mx-auto w-full max-w-md">
         <div className="text-center mb-8">
-          <Flower2 className="mx-auto mb-3 h-10 w-10 text-primary" />
+          <img src="/Dear_Floral_Logo.jpg" alt="Dear Floral logo" className="mx-auto mb-3 h-12 w-12 rounded-full object-cover" />
           <h1 className="font-heading text-2xl font-bold text-heading">Đăng ký</h1>
           <p className="mt-1 text-sm text-body">Tạo tài khoản Dear Floral của bạn</p>
         </div>

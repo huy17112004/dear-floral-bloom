@@ -1,6 +1,6 @@
 import { Link, Outlet, useLocation } from "react-router-dom";
 import { useMemo, useState } from "react";
-import { ChevronLeft, Flower2, LogOut, Menu } from "lucide-react";
+import { ChevronLeft, LogOut, Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { backofficeNavItems, type BackofficeRole } from "@/config/backofficeNav";
@@ -31,14 +31,14 @@ export function BackofficeLayout({ role }: BackofficeLayoutProps) {
         <div className="flex h-16 items-center justify-between border-b border-sidebar-border px-4">
           {!collapsed && (
             <div className="flex items-center gap-2">
-              <Flower2 className="h-6 w-6 text-sidebar-primary" />
+              <img src="/Dear_Floral_Logo.jpg" alt="Dear Floral logo" className="h-7 w-7 rounded-full object-cover" />
               <div className="flex flex-col">
                 <span className="font-heading text-lg font-semibold leading-tight text-sidebar-foreground">Dear Floral</span>
                 <span className="text-[10px] uppercase tracking-widest text-sidebar-foreground/60">{role}</span>
               </div>
             </div>
           )}
-          {collapsed && <Flower2 className="mx-auto h-6 w-6 text-sidebar-primary" />}
+          {collapsed && <img src="/Dear_Floral_Logo.jpg" alt="Dear Floral logo" className="mx-auto h-7 w-7 rounded-full object-cover" />}
           <Button
             variant="ghost"
             size="icon"

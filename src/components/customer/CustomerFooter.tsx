@@ -1,5 +1,4 @@
 import { Link } from 'react-router-dom';
-import { Flower2 } from 'lucide-react';
 
 export function CustomerFooter() {
   return (
@@ -8,7 +7,7 @@ export function CustomerFooter() {
         <div className="grid gap-8 md:grid-cols-4">
           <div>
             <div className="mb-4 flex items-center gap-2">
-              <Flower2 className="h-6 w-6 text-primary" />
+              <img src="/Dear_Floral_Logo.jpg" alt="Dear Floral logo" className="h-7 w-7 rounded-full object-cover" />
               <span className="font-heading text-lg font-semibold text-heading">Dear Floral</span>
             </div>
             <p className="text-sm text-body leading-relaxed">

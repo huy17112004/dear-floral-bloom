@@ -5,7 +5,7 @@ export default function AboutPage() {
     <div className="container py-12">
       <div className="mx-auto max-w-3xl">
         <div className="text-center">
-          <Flower2 className="mx-auto mb-4 h-10 w-10 text-primary" />
+          <img src="/Dear_Floral_Logo.jpg" alt="Dear Floral logo" className="mx-auto mb-4 h-12 w-12 rounded-full object-cover" />
           <h1 className="font-heading text-3xl font-bold text-heading md:text-4xl">Về Dear Floral</h1>
           <p className="mt-4 text-lg text-body leading-relaxed">
             Nơi nghệ thuật gặp thiên nhiên — mỗi cánh hoa là một kỷ niệm được lưu giữ

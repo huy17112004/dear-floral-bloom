@@ -2,7 +2,7 @@ import { Link, useLocation, Outlet, useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 import {
   ClipboardList, Package, ShoppingCart, Palette, FileText,
-  Warehouse, Truck, Flower2, Menu, ChevronLeft, LogOut
+  Warehouse, Truck, Menu, ChevronLeft, LogOut
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -39,14 +39,14 @@ export function StaffLayout() {
         <div className="flex h-16 items-center justify-between border-b border-sidebar-border px-4">
           {!collapsed && (
             <div className="flex items-center gap-2">
-              <Flower2 className="h-6 w-6 text-sidebar-primary" />
+              <img src="/Dear_Floral_Logo.jpg" alt="Dear Floral logo" className="h-7 w-7 rounded-full object-cover" />
               <div className="flex flex-col">
                 <span className="font-heading text-lg font-semibold leading-tight text-sidebar-foreground">Dear Floral</span>
                 <span className="text-[10px] uppercase tracking-widest text-sidebar-foreground/60">Staff</span>
               </div>
             </div>
           )}
-          {collapsed && <Flower2 className="mx-auto h-6 w-6 text-sidebar-primary" />}
+          {collapsed && <img src="/Dear_Floral_Logo.jpg" alt="Dear Floral logo" className="mx-auto h-7 w-7 rounded-full object-cover" />}
           <Button
             variant="ghost"
             size="icon"

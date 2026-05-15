@@ -1,6 +1,6 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useState } from 'react';
-import { Menu, X, User, ShoppingBag, Flower2, Package } from 'lucide-react';
+import { Menu, X, User, ShoppingBag, Package } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -36,7 +36,7 @@ export function CustomerHeader() {
     <header className="sticky top-0 z-50 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
       <div className="container flex h-16 items-center justify-between md:h-20">
         <Link to="/" className="flex items-center gap-2">
-          <Flower2 className="h-7 w-7 text-primary" />
+          <img src="/Dear_Floral_Logo.jpg" alt="Dear Floral logo" className="h-8 w-8 rounded-full object-cover" />
           <span className="font-heading text-xl font-semibold text-heading">Dear Floral</span>
         </Link>
 

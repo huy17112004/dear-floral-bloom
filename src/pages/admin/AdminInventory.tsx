@@ -79,7 +79,7 @@ export default function AdminInventory() {
                     </Badge>
                   </TableCell>
                   <TableCell>
-                    <span className={`font-semibold ${inv.quantityOnHand <= 5 ? 'text-destructive' : 'text-heading'}`}>
+                    <span className={`font-semibold ${inv.quantityOnHand <= 3 ? 'text-destructive' : 'text-heading'}`}>
                       {inv.quantityOnHand}
                     </span>
                   </TableCell>

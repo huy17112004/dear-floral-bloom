@@ -3,7 +3,6 @@ import { useState } from 'react';
 import {
   ChevronLeft,
   FileText,
-  Flower2,
   LayoutDashboard,
   LogOut,
   Menu,
@@ -48,11 +47,11 @@ export function AdminLayout() {
         <div className="flex h-16 items-center justify-between border-b border-sidebar-border px-4">
           {!collapsed && (
             <div className="flex items-center gap-2">
-              <Flower2 className="h-6 w-6 text-sidebar-primary" />
+              <img src="/Dear_Floral_Logo.jpg" alt="Dear Floral logo" className="h-7 w-7 rounded-full object-cover" />
               <span className="font-heading text-lg font-semibold text-sidebar-foreground">Dear Floral</span>
             </div>
           )}
-          {collapsed && <Flower2 className="mx-auto h-6 w-6 text-sidebar-primary" />}
+          {collapsed && <img src="/Dear_Floral_Logo.jpg" alt="Dear Floral logo" className="mx-auto h-7 w-7 rounded-full object-cover" />}
           <Button
             variant="ghost"
             size="icon"
